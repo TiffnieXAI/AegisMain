@@ -12,9 +12,9 @@ contract TrustRegistry{
     }
 
     struct Entry {
-        Status status
-        uint256 timestamp
-        bytes32 evidenceHash
+        Status status;
+        uint256 timestamp;
+        bytes32 evidenceHash;
     }
     // maybe wala nang evidence hash, pero para sa sim report yan.
 }

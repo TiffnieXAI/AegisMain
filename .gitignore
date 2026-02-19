@@ -1,3 +1,5 @@
 venv/
 .env
 testing.sol
+artifacts/
+.states/
