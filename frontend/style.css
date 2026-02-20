@@ -466,3 +466,127 @@ footer li {
 footer li:hover {
     color: #5151fb;
 }
+
+footer a {
+    font-size: 1rem;
+    color: #cbd5e1;
+    transition: color 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #5151fb;
+}
+
+/* ABOUT US PAGE */
+
+.abtbody{
+    height:50vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.team h1{
+    font-size: 5rem;
+    margin: 0.25rem 0;
+    display: inline-block;
+    background: linear-gradient(90deg, #5151fb, #0072ec);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.teamdesc {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3rem;
+    padding: 3rem 2rem;
+    background-color: #fff;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 1000px;
+    font-size: 1rem;
+    margin: 0;
+    color: #334155;
+    font-weight: 500;
+}
+
+/* CONTACTS PAGE */
+
+.con h1{
+    font-size: 5rem;
+    margin: 0.75rem 0;
+    text-align: center;
+    background: linear-gradient(90deg, #5151fb, #0072ec);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.underline{
+    width:400px;
+    height:4px;
+    background:#334155;
+    margin:20px auto;
+}
+
+.Contact1,
+.Contact2,
+.Contact3 {
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 2px solid;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.Contact1 {
+    border-color: #5151fb;
+    background-color: #f0f4ff;
+}
+
+.Contact2 {
+    border-color: #0072ec;
+    background-color: #f0f8ff;
+}
+
+.Contact3 {
+    border-color: #06b6d4;
+    background-color: #f0feff;
+}
+
+.Contact1:hover,
+.Contact2:hover,
+.Contact3:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.Contact1 h2 {
+    color: #5151fb;
+}
+
+.Contact2 h2 {
+    color: #0072ec;
+}
+
+.Contact3 h2 {
+    color: #06b6d4;
+}
+
+.Contact1 h2 i,
+.Contact2 h2 i,
+.Contact3 h2 i {
+    margin-right: 0.5rem;
+}
