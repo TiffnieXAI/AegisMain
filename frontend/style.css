@@ -32,41 +32,95 @@ nav {
     color: white;
     padding: 1rem 2rem;
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 1.5rem;
     border-bottom: 2px solid rgba(139, 92, 246, 0.2);
 }
 
 nav > div {
-    flex: 1;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: flex-start;
 }
 
 nav h1 {
     margin: 0;
     font-size: 1.5rem;
+    font-family: var(--title-font);
 }
 
-nav ul {
-    flex-basis: 100%;
-    list-style: none;
+.nav_logo {
     display: flex;
-    justify-content: left;
-    gap: 2rem;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.nav_logo_text {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.nav_logo a {
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    font-size: 2rem;
+    font-family: var(--title-font);
+    text-decoration: none;
+    font-weight: bold;
+    margin: 0;
+    line-height: 1;
+}
+
+.nav_subtitle {
+    font-size: 1rem;
+    color: var(--subtext-color);
+    font-family: var(--description-font);
+    margin: 0;
+    line-height: 1.1;
+}
+
+.nav_links {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 1.5rem;
+    list-style: none;
     margin: 0;
     padding: 0;
 }
 
 nav a {
-    color: white;
+    color: var(--text-color);
     text-decoration: none;
-    transition: color 0.3s;
+    transition: all 0.3s ease;
+    font-family: var(--description-font);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    position: relative;
 }
 
 nav a:hover {
-    color: #007bff;
+    color: var(--primary-color);
+    background-color: rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+nav a.active {
+    color: var(--primary-color);
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.15) 100%);
+    border-bottom: 2px solid var(--primary-color);
+    font-weight: 500;
 }
 
 main {
