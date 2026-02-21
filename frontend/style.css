@@ -20,12 +20,25 @@
     --description-font: 'Source Sans 3', sans-serif;
 }
 
-body {
+/* ===== BODY & MAIN LAYOUT ===== */
+body{
     font-family: Arial, sans-serif;
     line-height: 1.6;
     color: #e2e8f0;
     background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+    margin: 50px 80px 80px 80px;
 }
+
+/* for consistent spacing and centering of main content */
+.main-content {
+    flex: 1;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 80px; 
+}
+
+/* ===== NAVBAR ===== */
 
 nav {
     background-color: #0f172a;
@@ -37,6 +50,8 @@ nav {
     align-items: center;
     gap: 2rem;
     border-bottom: 2px solid rgba(139, 92, 246, 0.2);
+    width: 100%;
+    margin: 0;
 }
 
 nav > div {
@@ -183,7 +198,9 @@ button:hover {
     background-color: var(--secondary-color);
 }
 
-/* Landing page centered hero */
+
+/* ===== LANDING PAGE ===== */
+
 .landing {
     min-height: 100vh;
     display: flex;
@@ -756,15 +773,35 @@ footer a {
 }
 
 /* SECURITY TIPS PAGE */
+.go-to-dashboard-button {
+    color: var(--text-color);
+    text-decoration: none;
+    font-family: var(--description-font);
+}
+
+.page-header{
+    margin: 20px;  /* Space outside the div */
+    /* OR */
+    margin: 10px auto;  /* top/bottom: 10px, left/right: auto (centers) */
+}
+
+.page-header > p {
+    font-family: var(--description-font);
+    color: var(--subtext-color);
+}
+
+
 .Grandma-Test {
+    grid-column: 1 / -1;  /* Span from first to last grid line */
+    background: #0f172a;
+    padding: 40px 20px; 
     display: flex;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
     gap: 3rem;
-    padding: 3rem 2rem;
     background-color: #1e293b;
-    text-align: center;
+    text-align: left;
     border: 2px solid rgba(139, 92, 246, 0.3);
     border-radius: 12px;
     margin: 2rem auto;
@@ -772,13 +809,27 @@ footer a {
 }
 
 /* SECURITY BEST PRACTICES GRID */
-.security-best-practices-containers {
+.security-best-practices-containers, .common-web3-threats-containers {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 1.5rem;
     padding: 1rem 0;
     max-width: 1000px;
-    margin: 1rem auto 2rem;
+    width: 100%;
+    margin: 1rem 0 2rem 0;
+}
+
+.section-header {
+    grid-column: 1 / -1;
+    margin-bottom: 0.5rem;
+    text-align: left;
+}
+
+.section-header h2 {
+    font-family: var(--header-font);
+    color: var(--text-color);
+    font-size: 1.8rem;
+    margin: 0;
 }
 
 .security-best-practices-containers .section-header h2 {
@@ -788,12 +839,15 @@ footer a {
 }
 
 .security-best-practices-containers .container-purple,
-.security-best-practices-containers .container-yellow {
+.security-best-practices-containers .container-yellow,
+.threat-single-container {
     background: #0f172a;
     border-radius: 12px;
-    padding: 1rem;
+    padding: 1.5rem;
     border: 2px solid rgba(139,92,246,0.18);
     box-shadow: 0 6px 12px rgba(2,6,23,0.6);
+    width: 100%;
+    height: fit-content;
 }
 
 .security-best-practices-containers .container-yellow { border-color: rgba(250,204,21,0.15); }
@@ -816,6 +870,53 @@ footer a {
     color: #fff;
 }
 
+.threat-header {
+    margin-bottom: 1rem;
+}
+
+.threat-title h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-color);
+    font-family: var(--header-font);
+    font-size: 1.2rem;
+    margin: 0 0 0.25rem 0;
+}
+
+.threat-title h3 i {
+    color: var(--primary-color);
+}
+
+.threat-subtitle p {
+    color: var(--subtext-color);
+    font-family: var(--description-font);
+    margin: 0 0 1rem 0;
+    font-size: 0.95rem;
+}
+
+.threat-example {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.example-list p,
+.protect-list p {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-color);
+    font-weight: bold;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+.example-list p i,
+.protect-list p i {
+    color: var(--primary-color);
+}
+
 .security-best-practices-containers .container-purple .icon { 
     background: linear-gradient(135deg,#8b5cf6,#3b82f6); 
 }
@@ -834,6 +935,100 @@ footer a {
 
 @media (max-width: 768px) {
     .security-best-practices-containers { grid-template-columns: 1fr; }
+}
+
+.no-bullets {
+  list-style-type: none;  /* Removes the bullets */
+  padding-left: 0;        /* Removes the default left padding */
+  margin-left: 0;         /* Removes the default left margin */
+}
+
+.no-bullets li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--subtext-color);
+    font-family: var(--description-font);
+    line-height: 1.5;
+}
+
+.no-bullets li::before {
+    content: "•";
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+    position: absolute;
+    left: 0;
+}
+
+.common-web3-threats-containers {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1rem 0;
+    max-width: 1000px;
+    margin: 1rem auto 2rem;
+}
+
+.threat-single-container{
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 2px solid rgba(139,92,246,0.18);
+    box-shadow: 0 6px 12px rgba(2,6,23,0.6);
+}
+
+.takeaways-section {
+    display: flex;
+    justify-content: flex-start; /* Changed from center to flex-start */
+    width: 100%;
+    margin: 2rem 0;
+}
+
+.takeaways {
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid rgba(139, 92, 246, 0.18);
+    box-shadow: 0 6px 12px rgba(2, 6, 23, 0.6);
+    width: 100%; /* Fill width by default */
+    max-width: fit-content; /* But don't exceed content width */
+}
+
+.takeaways p {
+    margin: 0 0 1rem 0;
+    font-weight: bold;
+    color: #a78bfa;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.takeaways p i {
+    color: #8b5cf6;
+}
+
+.takeaways ul {
+    margin: 0;
+    padding-left: 0;
+}
+
+.takeaways li {
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+    color: #e2e8f0;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.takeaways li::before {
+    content: "•";
+    color: #8b5cf6;
+    font-weight: bold;
+    font-size: 1.2rem;
+    position: absolute;
+    left: 0;
 }
 
 /* ABOUT US PAGE */
