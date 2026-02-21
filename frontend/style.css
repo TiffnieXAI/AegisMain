@@ -58,6 +58,16 @@ nav h1 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+}
+
+.nav_logo:hover {
+    background-color: rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
 }
 
 .nav_logo_text {
@@ -67,7 +77,7 @@ nav h1 {
     gap: 0.1rem;
 }
 
-.nav_logo a {
+.nav_logo_text span {
     background: linear-gradient(90deg, #8b5cf6, #3b82f6);
     -webkit-background-clip: text;
     background-clip: text;
