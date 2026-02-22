@@ -37,10 +37,152 @@
     </nav>
     </header>
     <main>
-        <a href="dashboard.html" class = "go-to-dashboard-button"><i class="ri-arrow-left-line"></i> Back to Dashboard</a>
-        <h1> Architecture</h1>
-    </main>
+        <section class = "page-header">
+            <a href="dashboard.html" class = "go-to-dashboard-button"><i class="ri-arrow-left-line"></i> Back to Dashboard</a>
+            <h1>System Architecture</h1>
+            <p>Understanding how A.E.G.I.S. protects you from Web3 threats</p>
+            <br>
+        </section>
 
+        <section class = "systemarchi">
+            <div>
+                <h2><i class="ri-shield-line"></i> A.E.G.I.S. System Architecture</h2>
+                <p>Three-layer autonomous security infrastructure</p>
+            </div>
+
+            <div class="rag-container">
+                <div class="rag-icon">
+                    <i class="ri-brain-line"></i>
+                </div>
+                <div class="rag-content">
+                    <h2>RAG Intelligence Layer</h2>
+                    <p class="subtitle">Analyzes contract code against known vulnerabilities using LLM embeddings</p>
+                    <ul>
+                        <li>Similarity search across audited contracts</li>
+                        <li>Pattern matching for exploits</li>
+                        <li>Contextual embeddings generation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="arrows">
+            <i class="ri-arrow-down-line"></i>
+            </div>
+
+            <div class="rag-container">
+                <div class="rag-icon">
+                    <i class="ri-flashlight-line"></i>
+                </div>
+                <div class="rag-content">
+                    <h2>Action Listener</h2>
+                    <p class="subtitle">Intercepts and simulates transactions before execution</p>
+                    <ul>
+                        <li>Pre-execution simulation</li>
+                        <li>Function signature extraction</li>
+                        <li>State change prediction</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="arrows">
+                <i class="ri-arrow-down-line"></i>
+            </div>
+
+            <div class="rag-container">
+                <div class="rag-icon">
+                    <i class="ri-coin-line"></i>
+                </div>
+                <div class="rag-content">
+                    <h2>Trust Registry</h2>
+                    <p class="subtitle">On-chain verified reputation and whitelisting system</p>
+                    <ul>
+                        <li>Community-vetted addresses</li>
+                        <li>Decentralized reputation scores</li>
+                        <li>Smart contract verification</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="rag-container">
+                <div class="rag-icon">
+                    <i class="ri-shield-line">   </i>
+                </div>
+                <div class="rag-content">
+                    <h2>Unified Protection</h2>
+                    <p class="subtitle">All three layers work together to provide comprehensive, real-time protection. When you initiate a transaction, A.E.G.I.S. simultaneously analyzes it through RAG pattern matching, live simulation, and on-chain reputation verification to deliver a final security verdict in plain English.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="layer-wrapper">
+            <div class="layer-card">
+                <div class="layer-header">
+                    <i class="ri-book-open-line"></i>
+                    <h3>RAG Intelligence Layer</h3>
+                </div>
+                <p>Uses advanced AI to compare transaction patterns against thousands of known exploits and vulnerabilities in real-time. Powered by Large Language Models with contextual embeddings.</p>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <i class="ri-book-open-line"></i>
+                    <h3>Action Listener Layer</h3>
+                </div>
+                <p>Intercepts and simulates transactions in a safe sandbox before execution, showing you exactly what will happen to your assets. No surprises, no blind signing.</p>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <i class="ri-book-open-line"></i>
+                    <h3>Trust Registry Layer</h3>
+                </div>
+                <p>Leverages community-verified on-chain reputation data to identify safe and malicious contracts. Decentralized truth that can't be manipulated.</p>
+            </div>
+        </div>
+
+        <div class="grid-wrapper">
+            <div class="info-card">
+                <h3>How RAG Works</h3>
+                <ol>
+                    <li><strong>Embedding Generation:</strong> When you interact with a contract, A.E.G.I.S. generates semantic embeddings of the contract's bytecode and function signatures.</li>
+                    <li><strong>Similarity Search:</strong> These embeddings are compared against our database of audited contracts and known exploits using vector similarity search.</li>
+                    <li><strong>Pattern Matching:</strong> The system identifies if the contract logic matches known vulnerability patterns like reentrancy, integer overflow, or honeypots.</li>
+                    <li><strong>Contextual Analysis:</strong> The LLM analyzes the context and provides human-readable explanations of potential risks.</li>
+                </ol>
+            </div>
+
+            <div class="info-card">
+                <h3>Action Listener Process</h3>
+                <ol>
+                    <li><strong>Transaction Interception:</strong> Before you sign, A.E.G.I.S. intercepts the transaction data including function signature and call data.</li>
+                    <li><strong>Sandbox Simulation:</strong> The transaction is executed in a private, isolated fork of the blockchain to see what would happen.</li>
+                    <li><strong>State Change Analysis:</strong> We track all changes to your balances, approvals, and contract states that would occur.</li>
+                    <li><strong>Plain English Translation:</strong> Complex technical details are translated into simple language anyone can understand.</li>
+                </ol>
+            </div>
+
+            <div class="info-card">
+                <h3>Trust Registry Details</h3>
+                <ol>
+                    <li><strong>On-Chain Storage:</strong> Contract and wallet reputation scores are stored on the blockchain, making them tamper-proof and transparent.</li>
+                    <li><strong>Community Verification:</strong> Users can report malicious contracts, and verified auditors can whitelist safe ones.</li>
+                    <li><strong>Weighted Scoring:</strong> Reputation scores use weighted averages based on reporter credibility and audit history.</li>
+                    <li><strong>Hard Facts:</strong> Registry data overrides AI analysis when conflicts occur, providing definitive truth for known threats.</li>
+                </ol>
+            </div>
+
+            <div class="info-card">
+                <h3>Unified Decision Making</h3>
+                <ol>
+                    <li><strong>Layer Aggregation:</strong> Results from all three layers are combined with weighted importance based on confidence levels.</li>
+                    <li><strong>Risk Scoring:</strong> A unified risk score (0-100) is calculated considering patterns, simulations, and reputation data.</li>
+                    <li><strong>Conflict Resolution:</strong> When layers disagree, the Trust Registry serves as the source of truth for known contracts.</li>
+                    <li><strong>Final Verdict:</strong> You receive a clear recommendation with full transparency into how the decision was made.</li>
+                </ol>
+            </div>
+        </div>
+
+    </main>
     
     <footer>
         <p>A.E.G.I.S. - Protecting Web3 users from irreversible mistakes since 2026</p>
