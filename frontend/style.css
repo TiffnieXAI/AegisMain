@@ -26,7 +26,6 @@ body{
     line-height: 1.6;
     color: #e2e8f0;
     background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
-    margin: 50px 80px 80px 80px;
 }
 
 /* for consistent spacing and centering of main content */
@@ -168,9 +167,10 @@ nav a.active::before {
 }
 
 main {
-    max-width: 1200px;
-    margin: 10px, 20px, 20px, 20px; /* top 10px, bottom 20px, centered horizontally */
-    padding: 0 20px; /* left/right 20px spacing inside the content area */
+    max-width: 1400px;
+    margin: 50px auto 80px auto; /* Centered with auto margins */
+    padding: 0 80px; /* Match main-content padding */
+    width: 100%;
 }
 
 h1 {
@@ -779,6 +779,11 @@ footer a {
     font-family: var(--description-font);
 }
 
+.go-to-dashboard-button:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
 .page-header{
     margin: 20px;  /* Space outside the div */
     /* OR */
@@ -792,37 +797,38 @@ footer a {
 
 
 .Grandma-Test {
-    grid-column: 1 / -1;  /* Span from first to last grid line */
-    background: #0f172a;
-    padding: 40px 20px; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 3rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 40px 20px;
+    margin: 2rem 0; /* Remove auto margins, use 0 */
     background-color: #1e293b;
-    text-align: left;
     border: 2px solid rgba(139, 92, 246, 0.3);
     border-radius: 12px;
-    margin: 2rem auto;
-    max-width: 1000px;
 }
 
 /* SECURITY BEST PRACTICES GRID */
-.security-best-practices-containers, .common-web3-threats-containers {
+.security-best-practices-containers {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     padding: 1rem 0;
-    max-width: 1000px;
-    width: 100%;
+    width: 100%; /* Take full width of parent */
+    max-width: 100%; /* Don't exceed parent */
     margin: 1rem 0 2rem 0;
+}
+
+/* Remove any conflicting margins from containers */
+.security-best-practices-containers,
+.common-web3-threats-containers {
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .section-header {
     grid-column: 1 / -1;
     margin-bottom: 0.5rem;
     text-align: left;
+    width: 100%;
 }
 
 .section-header h2 {
@@ -933,8 +939,16 @@ footer a {
     color: var(--subtext-color); font-family: var(--description-font); 
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .security-best-practices-containers { grid-template-columns: 1fr; }
+    main {
+        padding: 0 20px; /* Smaller padding on mobile */
+    }
+    
+    .security-best-practices-containers,
+    .common-web3-threats-containers {
+        grid-template-columns: 1fr; /* Stack on mobile */
+    }
 }
 
 .no-bullets {
@@ -961,15 +975,61 @@ footer a {
     left: 0;
 }
 
+/* Check list styling - replaces no-bullets */
+.check-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5rem 0;
+}
+
+.check-list li {
+    position: relative;
+    padding-left: 1.8rem;
+    margin-bottom: 0.75rem;
+    color: var(--subtext-color);
+    font-family: var(--description-font);
+    line-height: 1.5;
+}
+
+.check-list li::before {
+    content: "✓"; /* Check mark */
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.check-list-icon {
+    list-style: none;
+    padding-left: 0;
+}
+
+.check-list-icon li {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.check-list-icon li i {
+    position: absolute;
+    left: 0;
+    top: 0.2rem;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+
 .common-web3-threats-containers {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 1.5rem;
     padding: 1rem 0;
-    max-width: 1000px;
-    margin: 1rem auto 2rem;
+    width: 100%;
+    max-width: 100%;
+    margin: 1rem 0 2rem 0;
 }
-
 .threat-single-container{
     background: #0f172a;
     border-radius: 12px;
@@ -980,7 +1040,7 @@ footer a {
 
 .takeaways-section {
     display: flex;
-    justify-content: flex-start; /* Changed from center to flex-start */
+    justify-content: flex-start;
     width: 100%;
     margin: 2rem 0;
 }
@@ -991,8 +1051,7 @@ footer a {
     padding: 1.5rem;
     border: 2px solid rgba(139, 92, 246, 0.18);
     box-shadow: 0 6px 12px rgba(2, 6, 23, 0.6);
-    width: 100%; /* Fill width by default */
-    max-width: fit-content; /* But don't exceed content width */
+    width: 100%; /* Take full width */
 }
 
 .takeaways p {
