@@ -54,12 +54,12 @@
             <div class="section-header"><h2>Security Best Practices</h2></div>
 
             <div class = "security-best-practices-containers">
-                <div class="container-purple">
+                <div class="container-yellow">
                 <div class="item">
                     <div class="icon"><i class="ri-error-warning-line"></i></div>
                     <div class="text">
                         <h3>Never Trust Unlimited Approvals</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Possimus aspernatur atque nulla est ducimus, enim laboriosam odit rerum, dolores iste aliquam molestiae voluptatibus!</p>
+                        <p>Legitimate dApps only request specific token amounts. If a contract asks for unlimited approval (uint256.max), it's likely a scam trying to drain your wallet.</p>
                     </div>
                 </div>
             </div>
@@ -68,8 +68,18 @@
                 <div class="item">
                     <div class="icon"><i class="ri-lock-line"></i></div>
                     <div class="text">
-                        <h3>Use Hardware Wallets</h3>
-                        <p>Use a hardware wallet for large balances and verify addresses on-device before signing.</p>
+                        <h3>Verify Contract Addresses</h3>
+                        <p>Scammers create fake websites with lookalike domains. Always verify the contract address on official sources like the project's verified Twitter or Discord.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-purple">
+                <div class="item">
+                    <div class="icon"><i class="ri-hand-steering-line"></i></div>
+                    <div class="text">
+                        <h3>Understand What You're Signing</h3>
+                        <p>Never 'blind sign' transactions you don't understand. A.E.G.I.S. translates technical data into plain English so you always know what you're approving.</p>
                     </div>
                 </div>
             </div>
@@ -78,8 +88,8 @@
                 <div class="item">
                     <div class="icon"><i class="ri-shield-user-line"></i></div>
                     <div class="text">
-                        <h3>Verify Contract Sources</h3>
-                        <p>Check verified contract code and audits before interacting with unknown contracts.</p>
+                        <h3>Research Before Investing</h3>
+                        <p>Check if contracts are audited, read community reviews, and verify team credentials. High returns often come with high risks or are outright scams.</p>
                     </div>
                 </div>
             </div>
@@ -88,8 +98,8 @@
                 <div class="item">
                     <div class="icon"><i class="ri-eye-line"></i></div>
                     <div class="text">
-                        <h3>Double-Check Addresses</h3>
-                        <p>Always confirm recipient addresses are correct and consider using ENS names where available.</p>
+                        <h3>Beware of Urgency Tactics</h3>
+                        <p>Scammers create false urgency ('Mint ends in 1 hour!'). Legitimate projects give ample time. Never rush into transactions due to FOMO.</p>
                     </div>
                 </div>
             </div>
@@ -98,8 +108,8 @@
                 <div class="item">
                     <div class="icon"><i class="ri-question-line"></i></div>
                     <div class="text">
-                        <h3>Beware Phishing Links</h3>
-                        <p>Never follow links from unknown messages; type trusted sites in the address bar directly.</p>
+                        <h3>Use Hardware Wallets</h3>
+                        <p>For significant holdings, use hardware wallets like Ledger or Trezor. They provide an extra layer of protection by keeping your private keys offline.</p>
                     </div>
                 </div>
             </div>
@@ -108,8 +118,8 @@
                 <div class="item">
                     <div class="icon"><i class="ri-refresh-line"></i></div>
                     <div class="text">
-                        <h3>Limit Token Approvals</h3>
-                        <p>Grant minimal approvals and revoke unused allowances regularly.</p>
+                        <h3>Watch for Honeypot Contracts</h3>
+                        <p>Some malicious contracts let you buy tokens but prevent selling. A.E.G.I.S. simulates transactions to detect these traps before you lose funds.</p>
                     </div>
                 </div>
             </div>
@@ -118,18 +128,8 @@
                 <div class="item">
                     <div class="icon"><i class="ri-file-shield-line"></i></div>
                     <div class="text">
-                        <h3>Keep Software Updated</h3>
-                        <p>Update your wallet and browser extensions to receive the latest security fixes.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="container-yellow">
-                <div class="item">
-                    <div class="icon"><i class="ri-hand-steering-line"></i></div>
-                    <div class="text">
-                        <h3>Practice Caution with DApps</h3>
-                        <p>Test small amounts first and review transaction details before signing.</p>
+                        <h3>Regular Security Audits</h3>
+                        <p>Periodically review and revoke unnecessary token approvals. Use tools like Revoke.cash to manage permissions you've granted to contracts.</p>
                     </div>
                 </div>
             </div>
@@ -157,18 +157,18 @@
                         <div class="example-list">
                             <p><i class="ri-lock-line"></i> Common Examples:</p>
                             <ul class="no-bullets">
-                                <li>Fake wallet interfaces prompting for private keys</li>
-                                <li>Impersonation of trusted services via email or social media</li>
-                                <li>Malicious links leading to fake DApps</li>
+                                <li>Lookalike domain names</li>
+                                <li>Cloned dApp interfaces</li>
+                                <li>Fake airdrop sites</li>
                             </ul>
                         </div>
 
                         <div class="protect-list">
                             <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
                             <ul class="check-list">
-                                <li>Never enter private keys on unknown websites</li>
-                                <li>Verify the authenticity of services before interacting</li>
-                                <li>Avoid clicking suspicious links in emails or messages</li>
+                                <li>Verify URLs carefully</li>
+                                <li>Use bookmarks for official sites</li>
+                                <li>Check Contract Addresses</li>
                             </ul>
                         </div>
                     </div> <!-- Close threat-example -->
@@ -179,10 +179,10 @@
                 <div class="threat-single-container">
                     <div class="threat-header">
                         <div class="threat-title">
-                            <h3><i class="ri-spam-line"></i> Phishing Attacks</h3>
+                            <h3><i class="ri-spam-line"></i> Unlimited Approvals</h3>
                         </div>
                         <div class="threat-subtitle">
-                            <p>Fake websites and contracts designed to steal your assets</p>
+                            <p>Malicious contracts requesting full access to your tokens</p>
                         </div>
                     </div> <!-- Close threat-header -->
 
@@ -190,30 +190,30 @@
                         <div class="example-list">
                             <p><i class="ri-lock-line"></i> Common Examples:</p>
                             <ul class="no-bullets">
-                                <li>Fake wallet interfaces prompting for private keys</li>
-                                <li>Impersonation of trusted services via email or social media</li>
-                                <li>Malicious links leading to fake DApps</li>
+                                <li>uint256.max approval requests</li>
+                                <li>Unnecessary permission grants</li>
+                                <li>Hidden approval functions</li>
                         </div>
 
                         <div class="protect-list">
                             <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
                             <ul class="check-list">
-                                <li>Never enter private keys on unknown websites</li>
-                                <li>Verify the authenticity of services before interacting</li>
-                                <li>Avoid clicking suspicious links in emails or messages</li>
+                                <li>Only approve specific amounts</li>
+                                <li>Regularly revoke old approvals</li>
+                                <li>Question why unlimited access is needed</li>
                             </ul>
                         </div>
                     </div> <!-- Close threat-example -->
                 </div> <!-- Close threat-single-container --> 
 
-                <!-- Continer 2-->
+                <!-- Continer 3-->
                 <div class="threat-single-container">
                     <div class="threat-header">
                         <div class="threat-title">
-                            <h3><i class="ri-spam-line"></i> Phishing Attacks</h3>
+                            <h3><i class="ri-spam-line"></i> Rug Pulls</h3>
                         </div>
                         <div class="threat-subtitle">
-                            <p>Fake websites and contracts designed to steal your assets</p>
+                            <p>Projects that drain liquidity and disappear</p>
                         </div>
                     </div> <!-- Close threat-header -->
 
@@ -221,32 +221,31 @@
                         <div class="example-list">
                             <p><i class="ri-lock-line"></i> Common Examples:</p>
                             <ul class="no-bullets">
-                                <li>Fake wallet interfaces prompting for private keys</li>
-                                <li>Impersonation of trusted services via email or social media</li>
-                                <li>Malicious links leading to fake DApps</li>
+                                <li>Unlocked liquidity pools</li>
+                                <li>Anonymous team members</li>
+                                <li>No vesting periods</li>
                             </ul>
                         </div>
 
                         <div class="protect-list">
                             <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
                             <ul class="check-list">
-                                <li>Never enter private keys on unknown websites</li>
-                                <li>Verify the authenticity of services before interacting</li>
-                                <li>Avoid clicking suspicious links in emails or messages</li>
+                                <li>Research team credentials</li>
+                                <li>Check liquidity locks</li>
+                                <li>Verify tokenomics</li>
                             </ul>
                         </div>
                     </div> <!-- Close threat-example -->
                 </div> <!-- Close threat-single-container --> 
 
 
-                <!-- Continer 2-->
+                <!-- Continer 4-->
                 <div class="threat-single-container">
                     <div class="threat-header">
                         <div class="threat-title">
-                            <h3><i class="ri-spam-line"></i> Phishing Attacks</h3>
-                        </div>
+                            <h3><i class="ri-spam-line"></i> Honeypot Contracts</h3>
                         <div class="threat-subtitle">
-                            <p>Fake websites and contracts designed to steal your assets</p>
+                            <p>Tokens you can buy but can never sell</p>
                         </div>
                     </div> <!-- Close threat-header -->
 
@@ -254,18 +253,18 @@
                         <div class="example-list">
                             <p><i class="ri-lock-line"></i> Common Examples:</p>
                             <ul class="no-bullets">
-                                <li>Fake wallet interfaces prompting for private keys</li>
-                                <li>Impersonation of trusted services via email or social media</li>
-                                <li>Malicious links leading to fake DApps</li>
+                                <li>Modified transfer functions</li>
+                                <li>Hidden selling restrictions</li>
+                                <li>Blacklist mechanisms</li>
                             </ul>
                         </div>
 
                         <div class="protect-list">
                             <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
                             <ul class="check-list">
-                                <li>Never enter private keys on unknown websites</li>
-                                <li>Verify the authenticity of services before interacting</li>
-                                <li>Avoid clicking suspicious links in emails or messages</li>
+                                <li>Check contract code before buying</li>
+                                <li>Look for audit reports</li>
+                                <li>Test with small amounts first</li>
                             </ul>
                         </div>
                     </div> <!-- Close threat-example -->
@@ -279,9 +278,9 @@
                 <p><i class="ri-lightbulb-line"></i> Key Takeaways</p>
                 <ul class="no-bullets">
                     <li><b>Transaction Permanence:</b> Blockchain transactions cannot be reversed. Always verify before signing.</li>
-                    <li><b>Transaction Permanence:</b> Blockchain transactions cannot be reversed. Always verify before signing.</li>
-                    <li><b>Transaction Permanence:</b> Blockchain transactions cannot be reversed. Always verify before signing.</li>
-                    <li><b>Transaction Permanence:</b> Blockchain transactions cannot be reversed. Always verify before signing.</li>
+                    <li><b>Trust Verification:</b> Don't trust, verify. Check contracts, team credentials, and audit reports before interacting.</li>
+                    <li><b>Security Tools:</b> Use A.E.G.I.S. and similar tools to analyze transactions before signing. Prevention is better than cure.</li>
+                    <li><b>Community Knowledge:</b> Learn from others' mistakes. Follow security researchers and stay updated on new threats.</li>
                 </ul>
             </div>
         </section>
