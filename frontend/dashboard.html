@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet"/>
     <link rel="stylesheet" href="style.css">
-    <title>Dashboard Page</title>
+    <title>A.E.G.I.S. Dashboard</title>
 </head>
 <body>
-    <header>
-        <nav>
-        <div class = "nav_header">
+<header>
+    <nav>
+        <div class="nav_header">
             <a href="dashboard.html" class="nav_logo">
-                <svg width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A.E.G.I.S. logo">
+                <svg width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="g" x1="0" x2="1">
                             <stop offset="0%" stop-color="#4f46e5"/>
@@ -26,7 +27,7 @@
                     <p class="nav_subtitle">Autonomous Evaluation & Guardian Intelligence System</p>
                 </div>
             </a>
-            <div class = "nav_links">
+            <div class="nav_links">
                 <a href="dashboard.html"><i class="ri-home-4-line"></i> Dashboard</a>
                 <a href="historyPage.html"><i class="ri-timer-line"></i> History</a>
                 <a href="architecturePage.html"><i class="ri-information-2-line"></i> Architecture</a>
@@ -34,18 +35,182 @@
             </div>
         </div>
     </nav>
-    </header>
-    <main>
-        <h1> Dashboard</h1>
-    </main>
+</header>
 
-    
-    <footer>
-        <p>A.E.G.I.S. - Protecting Web3 users from irreversible mistakes since 2026</p>
-    </footer>
+<main>
+    <section class="page-header">
+        <h1>Dashboard</h1>
+    </section>
+
+    <div class="main-container-dash">
+        <div class="welcome-section-dash">
+            <div class="dash-logo">
+                <svg width="120" height="120" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M32 4l18 6v10c0 15-11 27-18 30-7-3-18-15-18-30V10z" fill="url(#g)"/>
+                    <circle cx="32" cy="26" r="6" fill="rgba(255,255,255,0.9)"/>
+                </svg>
+            </div>
+            <h1>Welcome to A.E.G.I.S.</h1>
+            <p>Your autonomous guardian against Web3 threats. Real-time transaction analysis and protection.</p>
+        </div>
+
+        <div class="info-box-dash">
+            <strong>Your Security Command Center</strong>
+            <p>A.E.G.I.S uses three layers of AI-powered protection to analyze every transaction before you sign. We translate complex blockchain data into plain English, keeping you safe from scams and malicious contracts.</p>
+        </div>
+
+        <div class="stats-container-dash">
+            <div class="card-dash">
+                <h3>Total Scanned</h3>
+                <h2>1247</h2>
+                <span>Transactions analyzed</span>
+            </div>
+            <div class="card-dash threat">
+                <h3>Threats Blocked</h3>
+                <h2>89</h2>
+                <span>Malicious transactions</span>
+            </div>
+            <div class="card-dash safe">
+                <h3>Approved</h3>
+                <h2>1134</h2>
+                <span>Safe transactions</span>
+            </div>
+            <div class="card-dash pending">
+                <h3>Pending Review</h3>
+                <h2>6</h2>
+                <span>Awaiting decision</span>
+            </div>
+            <div class="card-dash rate">
+                <h3>Protection Rate</h3>
+                <h2>98.5%</h2>
+                <span>Threat detection</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid-row">
+            <div class="content-card-dash">
+                <div class="card-header-dash">
+                    <h3><i class="ri-error-warning-line"></i> Recent Security Alerts</h3>
+                    <p>Latest threats detected by A.E.G.I.S.</p>
+                </div>
+                <div class="alert-list-dash">
+                    <div class="alert-item critical">
+                        <div class="alert-info">
+                            <strong>Unlimited approval request blocked</strong>
+                            <span>2 minutes ago</span>
+                        </div>
+                        <span class="badge critical">CRITICAL</span>
+                    </div>
+                    <div class="alert-item warning">
+                        <div class="alert-info">
+                            <strong>Suspicious NFT mint detected</strong>
+                            <span>15 minutes ago</span>
+                        </div>
+                        <span class="badge warning">WARNING</span>
+                    </div>
+                    <div class="alert-item critical">
+                        <div class="alert-info">
+                            <strong>Honeypot contract identified</strong>
+                            <span>1 hour ago</span>
+                        </div>
+                        <span class="badge critical">CRITICAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card-dash">
+                <div class="card-header-dash">
+                    <h3><i class="ri-shield-check-line"></i> Protection Summary</h3>
+                    <p>Your security metrics</p>
+                </div>
+                <div class="summary-list-dash">
+                    <div class="summary-item">
+                        <span>Threats Blocked Today</span>
+                        <span class="val-threat">89</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Safe Transactions</span>
+                        <span class="val-safe">1134</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Protection Rate</span>
+                        <span class="val-rate">98.5%</span>
+                    </div>
+                    <a href="historyPage.html" class="history-btn-dash">View Full Transaction History</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar-dash">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <div class="status-text">
+                    <strong>All Systems Operational</strong>
+                    <p>RAG Intelligence, Action Listener, and Trust Registry are active</p>
+                </div>
+            </div>
+            <span class="online-label">Online</span>
+        </div>
+
+        <div class="wallet-card-dash" id="walletCard">
+            <div class="wallet-header">
+                <i class="ri-wallet-3-line"></i>
+                <div>
+                    <h3>Wallet Connection</h3>
+                    <p>Connect your wallet to start using A.E.G.I.S. protection</p>
+                </div>
+            </div>
+            <div class="wallet-status-box">
+                <p id="walletStatusText">Connect your wallet to enable real-time transaction monitoring and protection.</p>
+            </div>
+            <button class="connect-main-btn" id="openModalBtn">
+                <i class="ri-wallet-line"></i> Connect Wallet
+            </button>
+        </div>
+
+        <div class="modal-overlay" id="walletModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="ri-wallet-3-fill"></i> Connect Your Wallet</h3>
+                    <button class="close-modal" id="closeModalBtn">&times;</button>
+                </div>
+                <p class="modal-subtitle">Choose a wallet to connect to A.E.G.I.S. and start protecting your transactions</p>
+
+                <div class="wallet-options">
+                    <div class="wallet-option" onclick="connectWallet('MetaMask')">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg" alt="MetaMask">
+                        <div>
+                            <strong>MetaMask</strong>
+                            <span>Connect using MetaMask wallet</span>
+                        </div>
+                    </div>
+                    <div class="wallet-option" onclick="connectWallet('WalletConnect')">
+                        <i class="ri-links-line" style="font-size: 24px; color: #3b82f6;"></i>
+                        <div>
+                            <strong>WalletConnect</strong>
+                            <span>Scan with WalletConnect</span>
+                        </div>
+                    </div>
+                    <div class="wallet-option" onclick="connectWallet('Coinbase')">
+                        <i class="ri-checkbox-blank-circle-fill" style="font-size: 24px; color: #0052ff;"></i>
+                        <div>
+                            <strong>Coinbase Wallet</strong>
+                            <span>Connect using Coinbase Wallet</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="modal-footer-text">By connecting your wallet, you agree to our Terms of Service</p>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <p>A.E.G.I.S. - Protecting Web3 users from irreversible mistakes since 2026</p>
+</footer>
+
 
 </body>
-
-
-<script src="script.js"></script>
+<script src="dashboard.js"></script>
 </html>
