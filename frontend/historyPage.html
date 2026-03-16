@@ -37,13 +37,61 @@
     </nav>
     </header>
     <main>
-        <a href="dashboard.html" class = "go-to-dashboard-button"><i class="ri-arrow-left-line"></i> Back to Dashboard</a>
-        <h1> History</h1>
+        <section class="page-header">
+            <a href="dashboard.html" class="go-to-dashboard-button"><i class="ri-arrow-left-line"></i> Back to Dashboard</a>
+            <h1>Transaction History</h1>
+            <p>View and manage all your transactions with detailed security analysis</p>
+        </section>
+
+        <!-- filter panel -->
+        <div class="filter-panel">
+            <div class="filter-group">
+                <h4>Status:</h4>
+                <div class="status-and-risk-level-row">
+                    <div class="filter-options" id="statusFilters">
+                        <button class="filter-btn active" data-status="all">All <span class="count" id="statusAll">0</span></button>
+                        <button class="filter-btn" data-status="approved">Approved <span class="count" id="statusApproved">0</span></button>
+                        <button class="filter-btn" data-status="rejected">Rejected <span class="count" id="statusRejected">0</span></button>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <h4>Risk Level:</h4>
+                <div class="status-and-risk-level-row">
+                    <div class="filter-options" id="riskFilters">
+                        <button class="filter-btn active" data-risk="all">All <span class="count" id="riskAll">0</span></button>
+                        <button class="filter-btn" data-risk="critical">Critical <span class="count" id="riskCritical">0</span></button>
+                        <button class="filter-btn" data-risk="high">High <span class="count" id="riskHigh">0</span></button>
+                        <button class="filter-btn" data-risk="medium">Medium <span class="count" id="riskMedium">0</span></button>
+                        <button class="filter-btn" data-risk="low">Low <span class="count" id="riskLow">0</span></button>
+                        <button class="filter-btn" data-risk="safe">Safe <span class="count" id="riskSafe">0</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- transaction list container (dynamic) -->
+        <div class="transactions-list" id="transactionList"></div>
+
+        <!-- no transactions message (hidden by default) -->
+        <div class="no-transactions-msg" id="noTransactionsMsg" style="display: none;">
+            <p>No transactions found with current filters</p>
+            <button class="clear-filters" id="clearFiltersBtn">Clear all filters</button>
+        </div>
+
+        <!-- footer inside main? we'll keep original footer outside main, but also history-footer -->
     </main>
 
     
     <footer>
-        <p>A.E.G.I.S. - Protecting Web3 users from irreversible mistakes since 2026</p>
+        <div class="history-footer">
+            <p class="footer-motto">A.E.G.I.S. - Protecting Web3 users from irreversible mistakes since 2026</p>
+            <div class="footer-badges">
+                <span class="badge">AI-Powered</span>
+                <span class="badge">Decentralized</span>
+                <span class="badge">Open Source</span>
+            </div>
+        </div>
     </footer>
 
 </body>
