@@ -1,0 +1,32 @@
+// Modal Logic
+const modal = document.getElementById('walletModal');
+const openBtn = document.getElementById('openModalBtn');
+const closeBtn = document.getElementById('closeModalBtn');
+
+openBtn.onclick = () => modal.style.display = 'flex';
+closeBtn.onclick = () => modal.style.display = 'none';
+
+// Close modal if user clicks outside of it
+window.onclick = (event) => {
+    if (event.target == modal) modal.style.display = 'none';
+}
+
+// Wallet Connection Simulation
+function connectWallet(walletName) {
+    const statusText = document.getElementById('walletStatusText');
+    const connectBtn = document.getElementById('openModalBtn');
+
+    // Simulate Loading
+    statusText.innerText = `Connecting to ${walletName}...`;
+    modal.style.display = 'none';
+
+    setTimeout(() => {
+        // Update UI to show connected state
+        statusText.innerHTML = `<span style="color: #39d98a;">● Connected to ${walletName}</span><br>Address: 0x71C...4f92`;
+        connectBtn.innerHTML = `<i class="ri-check-line"></i> Wallet Connected`;
+        connectBtn.style.borderColor = "#39d98a";
+        connectBtn.style.color = "#39d98a";
+
+        console.log(`${walletName} connected successfully.`);
+    }, 1200);
+}

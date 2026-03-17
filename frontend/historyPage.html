@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css">
+    <title>History Page</title>
+</head>
+<body>
+    <header>
+        <nav>
+        <div class = "nav_header">
+            <a href="dashboard.html" class="nav_logo">
+                <svg width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A.E.G.I.S. logo">
+                    <defs>
+                        <linearGradient id="g" x1="0" x2="1">
+                            <stop offset="0%" stop-color="#4f46e5"/>
+                            <stop offset="100%" stop-color="#06b6d4"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M32 4l18 6v10c0 15-11 27-18 30-7-3-18-15-18-30V10z" fill="url(#g)"/>
+                    <circle cx="32" cy="26" r="6" fill="rgba(255,255,255,0.9)"/>
+                </svg>
+                <div class="nav_logo_text">
+                    <span>A.E.G.I.S.</span>
+                    <p class="nav_subtitle">Autonomous Evaluation & Guardian Intelligence System</p>
+                </div>
+            </a>
+            <div class = "nav_links">
+                <a href="dashboard.html"><i class="ri-home-4-line"></i> Dashboard</a>
+                <a href="historyPage.html"><i class="ri-timer-line"></i> History</a>
+                <a href="architecturePage.html"><i class="ri-information-2-line"></i> Architecture</a>
+                <a href="securityTips.html"><i class="ri-lightbulb-line"></i> Security Tips</a>
+            </div>
+        </div>
+    </nav>
+    </header>
+    <main>
+        <section class="page-header">
+            <a href="dashboard.html" class="go-to-dashboard-button"><i class="ri-arrow-left-line"></i> Back to Dashboard</a>
+            <h1>Transaction History</h1>
+            <p>View and manage all your transactions with detailed security analysis</p>
+        </section>
+
+        <!-- filter panel -->
+        <div class="filter-panel">
+            <div class="filter-group">
+                <h4>Status:</h4>
+                <div class="status-and-risk-level-row">
+                    <div class="filter-options" id="statusFilters">
+                        <button class="filter-btn active" data-status="all">All <span class="count" id="statusAll">0</span></button>
+                        <button class="filter-btn" data-status="approved">Approved <span class="count" id="statusApproved">0</span></button>
+                        <button class="filter-btn" data-status="rejected">Rejected <span class="count" id="statusRejected">0</span></button>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <h4>Risk Level:</h4>
+                <div class="status-and-risk-level-row">
+                    <div class="filter-options" id="riskFilters">
+                        <button class="filter-btn active" data-risk="all">All <span class="count" id="riskAll">0</span></button>
+                        <button class="filter-btn" data-risk="critical">Critical <span class="count" id="riskCritical">0</span></button>
+                        <button class="filter-btn" data-risk="high">High <span class="count" id="riskHigh">0</span></button>
+                        <button class="filter-btn" data-risk="medium">Medium <span class="count" id="riskMedium">0</span></button>
+                        <button class="filter-btn" data-risk="low">Low <span class="count" id="riskLow">0</span></button>
+                        <button class="filter-btn" data-risk="safe">Safe <span class="count" id="riskSafe">0</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- transaction list container (dynamic) -->
+        <div class="transactions-list" id="transactionList"></div>
+
+        <!-- no transactions message (hidden by default) -->
+        <div class="no-transactions-msg" id="noTransactionsMsg" style="display: none;">
+            <p>No transactions found with current filters</p>
+            <button class="clear-filters" id="clearFiltersBtn">Clear all filters</button>
+        </div>
+
+        <!-- footer inside main? we'll keep original footer outside main, but also history-footer -->
+    </main>
+
+    
+    <footer>
+        <div class="history-footer">
+            <p class="footer-motto">A.E.G.I.S. - Protecting Web3 users from irreversible mistakes since 2026</p>
+            <div class="footer-badges">
+                <span class="badge">AI-Powered</span>
+                <span class="badge">Decentralized</span>
+                <span class="badge">Open Source</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+<script src="script.js"></script>
+</html>
