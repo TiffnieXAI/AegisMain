@@ -1,15 +1,18 @@
-import os
 import json
+import secrets
 from dbsettings import get_session
 from sqlmodel import Session, select
 from sqlalchemy import func
 from models.wallet import WalletUser, UserTransaction, UserThreatRecord
 from models.analysis import ContractRegistryCache, SimulationResult, AIAnalysis
+from models.session import AuthSession
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from web3 import Web3
 from substrateinterface import SubstrateInterface
+from eth_account.messages import encode_defunct
+from eth_account import Account
 
 app = FastAPI()
 
@@ -186,3 +189,44 @@ def get_stats(wallet_address: str, session: Session = Depends(get_session)):
         "pending": pending,
         "protection_rate": round(protection_rate, 2)
     }
+
+
+@app.get("/auth/nonce/{wallet_address}")
+def get_nonce(wallet_address: str, session: Session = Depends(get_session)):
+    wallet = session.get(WalletUser, wallet_address)
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    nonce = secrets.token_hex(16)
+    auth = AuthSession(wallet_address=wallet_address, nonce=nonce)
+    session.add(auth)
+    session.commit()
+    return {"nonce": nonce}
+
+
+@app.post("/auth/verify/")
+def verify_signature(data: dict, session: Session = Depends(get_session)):
+    wallet_address = data["wallet_address"]
+    signature = data["signature"]
+
+    auth = session.exec(
+        select(AuthSession).where(AuthSession.wallet_address ==
+                                  wallet_address).order_by(AuthSession.created_timestamp.desc())
+    ).first()
+
+    if not auth:
+        raise HTTPException(status_code=404, detail="Nonce not found")
+
+    message = f"Login to AEGIS:\nNonce: {auth.nonce}"
+    encoded_message = encode_defunct(text=message)
+
+    try:
+        recovered_address = Account.recover_message(
+            encoded_message, signature=signature)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Signature verification failed: {str(e)}")
+    if recovered_address.lower() != wallet_address.lower():
+        raise HTTPException(
+            status_code=400, detail="Signature does not match wallet address")
+    return {"message": "Authentication successful"}

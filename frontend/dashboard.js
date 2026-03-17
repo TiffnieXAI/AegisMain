@@ -39,6 +39,11 @@ async function connectWallet(walletName) {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const walletAddress = accounts[0];
 
+        const nonce = await getNonce(walletAddress);
+        const signature = await signMessage(walletAddress, nonce);
+        const verificationResult = await verifySignature(walletAddress, signature);
+
+        // successfull connection proceeds
         statusText.innerHTML = `<span style="color: #39d98a;">● Connected to ${walletName}</span><br>Address: ${walletAddress}`;
         connectBtn.innerHTML = `<i class="ri-check-line"></i> Wallet Connected`;
         connectBtn.style.borderColor = "#39d98a";
@@ -87,3 +92,38 @@ async function syncWallet(walletAddress) {
     }
 }
 
+async function getNonce(walletAddress) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/auth/nonce/${walletAddress}`);
+        const data = await response.json();
+        return data.nonce;
+        }
+    catch (error) {
+        console.error('Error fetching nonce:', error);
+        throw new Error('Failed to fetch nonce');
+    }
+}
+
+async function signMessage(walletAddres, nonce) {
+    const message = `Login to AEGIS:\nNonce: ${nonce}`;
+    const signature = await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, walletAddress]
+    });
+    return signature;
+}
+
+async function verifySignature(walletAddress, signature) {
+    const response = await fetch(`hhtp://127.0.0.1:8000/auth/verify`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            wallet_address: walletAddress,
+            signature: signature
+        })
+    });
+
+    return await response.json();
+}
