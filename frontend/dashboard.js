@@ -41,8 +41,8 @@ async function fetchDashboardStats(walletAddress) {
         const data = await response.json();
 
         document.getElementById('totalScanned').innerText = data.total_scanned;
-        document.getElementById('threatsBlocked').innerText = data.threats_blocked_today;
-        document.getElementById('approved').innerText = data.approved;
+        document.getElementById('threatsBlocked').innerText = data.threats_blocked;
+        document.getElementById('approved').innerText = data.safe_transactions;
         document.getElementById('pending').innerText = data.pending;
         document.getElementById('rate').innerText = data.protection_rate + '%';
     } catch (error) {
