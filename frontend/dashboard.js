@@ -12,25 +12,48 @@ window.onclick = (event) => {
 }
 
 // Wallet Connection Simulation
-function connectWallet(walletName) {
+async function connectWallet(walletName) {
     const statusText = document.getElementById('walletStatusText');
     const connectBtn = document.getElementById('openModalBtn');
+
+    if (typeof window.ethereum == 'undefined') {
+        modal.style.display = 'none';
+        alert('No Ethereum wallet detected. Please install MetaMask or another wallet.');
+        statusText.innerText = 'No Ethereum wallet detected. Please install MetaMask or another wallet.';
+        return;
+    }
+
+    if (!window.ethereum.isMetaMask) {
+        modal.style.display = 'none';
+        alert('MetaMask is not detected. Please install MetaMask to connect.');
+        statusText.innerText = 'MetaMask is not detected. Please install MetaMask to connect.';
+        return;
+    }
 
     // Simulate Loading
     statusText.innerText = `Connecting to ${walletName}...`;
     modal.style.display = 'none';
 
-    setTimeout(() => {
-        // Update UI to show connected state
-        statusText.innerHTML = `<span style="color: #39d98a;">● Connected to ${walletName}</span><br>Address: 0x71C...4f92`;
+    try {
+        // requesting a wallet connection here
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const walletAddress = accounts[0];
+
+        statusText.innerHTML = `<span style="color: #39d98a;">● Connected to ${walletName}</span><br>Address: ${walletAddress}`;
         connectBtn.innerHTML = `<i class="ri-check-line"></i> Wallet Connected`;
         connectBtn.style.borderColor = "#39d98a";
         connectBtn.style.color = "#39d98a";
 
         console.log(`${walletName} connected successfully.`);
 
-         fetchDashboardStats("0xA12F91AA001"); // Change this please kapag may wallet na
-    }, 1200);
+        fetchDashboardStats("0xA12F91AA001"); // Change this please kapag may wallet na
+
+        await syncWallet(walletAddress);
+    } catch (error) {
+        console.error('Error connecting to wallet:', error);
+        statusText.innerText = `Failed to connect to ${walletName}. Please try again.`;
+        return;
+    }
 }
 
 // lanz to -- adding dynamic data fetching for dashboard stats
@@ -49,3 +72,18 @@ async function fetchDashboardStats(walletAddress) {
         console.error('Error fetching dashboard stats:', error);
     }
 }
+
+async function syncWallet(walletAddress) {
+    try{
+        await fetch(`http://127.0.0.1:8000/sync/${walletAddress}`, { 
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wallet_address: walletAddress })
+        });
+
+        console.log('Wallet synced successfully.');
+    } catch(error) {
+        console.error('Error syncing wallet:', error);
+    }
+}
+
