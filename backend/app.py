@@ -13,6 +13,7 @@ from web3 import Web3
 from substrateinterface import SubstrateInterface
 from eth_account.messages import encode_defunct
 from eth_account import Account
+from datetime import datetime, timezone
 
 app = FastAPI()
 
@@ -128,12 +129,17 @@ async def analyze_intent(tx_payload: TransactionRequest):
         }
     }
 
+# Wallet endpoints
+
 
 @app.post("/wallets/")
 def create_wallet(wallet: WalletUser, session: Session = Depends(get_session)):
     existing_wallet = session.get(WalletUser, wallet.wallet_address)
     if existing_wallet:
         raise HTTPException(status_code=400, detail="Wallet already exists")
+    now = datetime.now(timezone.utc)
+    wallet.created_timestamp = now
+    wallet.last_login = now
     session.add(wallet)
     session.commit()
     session.refresh(wallet)
@@ -145,6 +151,265 @@ def get_wallets(session: Session = Depends(get_session)):
     return session.query(WalletUser).all()
 
 
+@app.get("/wallets/{wallet_address}")
+def get_wallet(wallet_address: str, session: Session = Depends(get_session)):
+    wallet = session.get(WalletUser, wallet_address)
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    return wallet
+
+
+@app.delete("/wallets/{wallet_address}")
+def delete_wallet(wallet_address: str, session: Session = Depends(get_session)):
+    wallet = session.get(WalletUser, wallet_address)
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    session.query(AuthSession).filter(
+        AuthSession.wallet_address == wallet_address
+    ).delete(synchronize_session=False)
+
+    tx_hashes = [
+        row[0] for row in session.query(UserTransaction.transaction_hash).filter(
+            UserTransaction.wallet_address == wallet_address
+        ).all()
+    ]
+
+    if tx_hashes:
+        session.query(SimulationResult).filter(
+            SimulationResult.transaction_hash.in_(tx_hashes)
+        ).delete(synchronize_session=False)
+
+        session.query(AIAnalysis).filter(
+            AIAnalysis.transaction_hash.in_(tx_hashes)
+        ).delete(synchronize_session=False)
+
+        session.query(UserThreatRecord).filter(
+            UserThreatRecord.transaction_hash.in_(tx_hashes)
+        ).delete(synchronize_session=False)
+
+    session.query(UserThreatRecord).filter(
+        UserThreatRecord.wallet_address == wallet_address
+    ).delete(synchronize_session=False)
+
+    session.query(UserTransaction).filter(
+        UserTransaction.wallet_address == wallet_address
+    ).delete(synchronize_session=False)
+
+    session.delete(wallet)
+    session.commit()
+    return {"message": "Deleted wallet and all associated data"}
+
+
+@app.put("/wallets/{wallet_address}")
+def update_wallet(wallet_address: str, updated: WalletUser, session: Session = Depends(get_session)):
+    wallet = session.get(WalletUser, wallet_address)
+
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    wallet.last_login = updated.last_login
+    session.add(wallet)
+    session.commit()
+
+    return wallet
+
+
+@app.get("/transactions/")
+def get_transactions(session: Session = Depends(get_session)):
+    return session.query(UserTransaction).all()
+
+
+@app.post("/transactions/")
+def create_transaction(tx: UserTransaction, session: Session = Depends(get_session)):
+    existing = session.get(UserTransaction, tx.transaction_hash)
+    if existing:
+        raise HTTPException(
+            status_code=400, detail="Transaction hash already exists")
+    tx.timestamp = datetime.now(timezone.utc)
+    session.add(tx)
+    session.commit()
+    session.refresh(tx)
+    return tx
+
+
+@app.delete("/transactions/{tx_hash}")
+def delete_tx(tx_hash: str, session: Session = Depends(get_session)):
+    tx = session.get(UserTransaction, tx_hash)
+    if not tx:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    # Delete all children first
+    session.query(SimulationResult).filter(
+        SimulationResult.transaction_hash == tx_hash
+    ).delete(synchronize_session=False)
+
+    session.query(AIAnalysis).filter(
+        AIAnalysis.transaction_hash == tx_hash
+    ).delete(synchronize_session=False)
+
+    session.query(UserThreatRecord).filter(
+        UserThreatRecord.transaction_hash == tx_hash
+    ).delete(synchronize_session=False)
+
+    session.delete(tx)
+    session.commit()
+    return {"message": "Deleted transaction and all related records"}
+
+
+@app.get("/threats/")
+def get_threats(session: Session = Depends(get_session)):
+    return session.query(UserThreatRecord).all()
+
+
+@app.get("/threats/{threat_id}")
+def get_threat(threat_id: int, session: Session = Depends(get_session)):
+    threat = session.get(UserThreatRecord, threat_id)
+    if not threat:
+        raise HTTPException(status_code=404, detail="Not found")
+    return threat
+
+
+@app.post("/threats/")
+def create_threat(threat: UserThreatRecord, session: Session = Depends(get_session)):
+    threat.timestamp = datetime.now(timezone.utc)
+    session.add(threat)
+    session.commit()
+    session.refresh(threat)
+    return threat
+
+
+@app.put("/threats/{threat_id}")
+def update_threat(threat_id: int, updated: UserThreatRecord, session: Session = Depends(get_session)):
+    threat = session.get(UserThreatRecord, threat_id)
+    if not threat:
+        raise HTTPException(status_code=404, detail="Not found")
+    threat.threat_description = updated.threat_description
+    threat.risk_level = updated.risk_level
+    session.add(threat)
+    session.commit()
+    return threat
+
+
+@app.delete("/threats/{threat_id}")
+def delete_threat(threat_id: int, session: Session = Depends(get_session)):
+    threat = session.get(UserThreatRecord, threat_id)
+    if not threat:
+        raise HTTPException(status_code=404, detail="Not found")
+    session.delete(threat)
+    session.commit()
+    return {"message": "Deleted"}
+
+
+@app.get("/simulations/")
+def get_simulations(session: Session = Depends(get_session)):
+    return session.query(SimulationResult).all()
+
+
+@app.post("/simulations/")
+def create_simulation(sim: SimulationResult, session: Session = Depends(get_session)):
+    session.add(sim)
+    session.commit()
+    session.refresh(sim)
+    return sim
+
+
+@app.put("/simulations/{sim_id}")
+def update_simulation(sim_id: int, updated: SimulationResult, session: Session = Depends(get_session)):
+    sim = session.get(SimulationResult, sim_id)
+    if not sim:
+        raise HTTPException(status_code=404, detail="Not found")
+    sim.simulation_summary = updated.simulation_summary
+    session.add(sim)
+    session.commit()
+    return sim
+
+
+@app.delete("/simulations/{sim_id}")
+def delete_simulation(sim_id: int, session: Session = Depends(get_session)):
+    sim = session.get(SimulationResult, sim_id)
+    if not sim:
+        raise HTTPException(status_code=404, detail="Not found")
+    session.delete(sim)
+    session.commit()
+    return {"message": "Deleted"}
+
+
+@app.get("/analyses/")
+def get_analyses(session: Session = Depends(get_session)):
+    return session.query(AIAnalysis).all()
+
+
+@app.post("/analyses/")
+def create_analysis(analysis: AIAnalysis, session: Session = Depends(get_session)):
+    session.add(analysis)
+    session.commit()
+    session.refresh(analysis)
+    return analysis
+
+
+@app.put("/analyses/{analysis_id}")
+def update_analysis(analysis_id: int, updated: AIAnalysis, session: Session = Depends(get_session)):
+    analysis = session.get(AIAnalysis, analysis_id)
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Not found")
+    analysis.ai_summary = updated.ai_summary
+    analysis.recommendation = updated.recommendation
+    analysis.trust_score = updated.trust_score
+    session.add(analysis)
+    session.commit()
+    return analysis
+
+
+@app.delete("/analyses/{analysis_id}")
+def delete_analysis(analysis_id: int, session: Session = Depends(get_session)):
+    analysis = session.get(AIAnalysis, analysis_id)
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Not found")
+    session.delete(analysis)
+    session.commit()
+    return {"message": "Deleted"}
+
+
+@app.get("/registry/")
+def get_registry(session: Session = Depends(get_session)):
+    return session.query(ContractRegistryCache).all()
+
+
+@app.post("/registry/")
+def create_registry(entry: ContractRegistryCache, session: Session = Depends(get_session)):
+    existing = session.get(ContractRegistryCache, entry.contract_address)
+    if existing:
+        raise HTTPException(status_code=400, detail="Entry already exists")
+    session.add(entry)
+    session.commit()
+    session.refresh(entry)
+    return entry
+
+
+@app.put("/registry/{contract_address}")
+def update_registry(contract_address: str, updated: ContractRegistryCache, session: Session = Depends(get_session)):
+    entry = session.get(ContractRegistryCache, contract_address)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Not found")
+    entry.is_verified = updated.is_verified
+    entry.tregistry_status = updated.tregistry_status
+    entry.last_checked_timestamp = updated.last_checked_timestamp
+    session.add(entry)
+    session.commit()
+    return entry
+
+
+@app.delete("/registry/{contract_address}")
+def delete_registry(contract_address: str, session: Session = Depends(get_session)):
+    entry = session.get(ContractRegistryCache, contract_address)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Not found")
+    session.delete(entry)
+    session.commit()
+    return {"message": "Deleted"}
+
+
 @app.get("/stats/{wallet_address}")
 def get_stats(wallet_address: str, session: Session = Depends(get_session)):
     wallet = session.get(WalletUser, wallet_address)
@@ -153,8 +418,7 @@ def get_stats(wallet_address: str, session: Session = Depends(get_session)):
 
     threats_blocked = session.exec(
         select(func.count()).where(
-            UserThreatRecord.wallet_address == wallet_address,
-            UserTransaction.status == 2
+            UserThreatRecord.wallet_address == wallet_address
         )
     ).one()
 
@@ -198,10 +462,22 @@ def get_nonce(wallet_address: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Wallet not found")
 
     nonce = secrets.token_hex(16)
-    auth = AuthSession(wallet_address=wallet_address, nonce=nonce)
+    auth = AuthSession(wallet_address=wallet_address, nonce=nonce,
+                       created_timestamp=datetime.now(timezone.utc))
     session.add(auth)
     session.commit()
     return {"nonce": nonce}
+
+
+@app.post("/sync/{wallet_address}")
+def sync_wallet(wallet_address: str, session: Session = Depends(get_session)):
+    wallet = session.get(WalletUser, wallet_address)
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    wallet.last_login = datetime.now(timezone.utc)
+    session.add(wallet)
+    session.commit()
+    return {"message": "Wallet synced", "wallet_address": wallet_address}
 
 
 @app.post("/auth/verify/")
@@ -210,8 +486,9 @@ def verify_signature(data: dict, session: Session = Depends(get_session)):
     signature = data["signature"]
 
     auth = session.exec(
-        select(AuthSession).where(AuthSession.wallet_address ==
-                                  wallet_address).order_by(AuthSession.created_timestamp.desc())
+        select(AuthSession)
+        .where(AuthSession.wallet_address == wallet_address)
+        .order_by(AuthSession.created_timestamp.desc())
     ).first()
 
     if not auth:
@@ -226,7 +503,27 @@ def verify_signature(data: dict, session: Session = Depends(get_session)):
     except Exception as e:
         raise HTTPException(
             status_code=400, detail=f"Signature verification failed: {str(e)}")
+
     if recovered_address.lower() != wallet_address.lower():
         raise HTTPException(
             status_code=400, detail="Signature does not match wallet address")
+
+    auth.signature = signature
+    session.add(auth)
+
+    # Auto-register the wallet if it doesn't exist yet
+    wallet = session.get(WalletUser, wallet_address)
+    if not wallet:
+        now = datetime.now(timezone.utc)
+        wallet = WalletUser(
+            wallet_address=wallet_address,
+            created_timestamp=now,
+            last_login=now
+        )
+        session.add(wallet)
+    else:
+        wallet.last_login = datetime.now(timezone.utc)
+        session.add(wallet)
+
+    session.commit()
     return {"message": "Authentication successful"}
