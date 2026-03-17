@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css">
+    <title>Security Tips Page</title>
+</head>
+<body>
+    <header>
+        <nav>
+        <div class = "nav_header">
+            <a href="dashboard.html" class="nav_logo">
+                <svg width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A.E.G.I.S. logo">
+                    <defs>
+                        <linearGradient id="g" x1="0" x2="1">
+                            <stop offset="0%" stop-color="#4f46e5"/>
+                            <stop offset="100%" stop-color="#06b6d4"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M32 4l18 6v10c0 15-11 27-18 30-7-3-18-15-18-30V10z" fill="url(#g)"/>
+                    <circle cx="32" cy="26" r="6" fill="rgba(255,255,255,0.9)"/>
+                </svg>
+                <div class="nav_logo_text">
+                    <span>A.E.G.I.S.</span>
+                    <p class="nav_subtitle">Autonomous Evaluation & Guardian Intelligence System</p>
+                </div>
+            </a>
+            <div class = "nav_links">
+                <a href="dashboard.html"><i class="ri-home-4-line"></i> Dashboard</a>
+                <a href="historyPage.html"><i class="ri-timer-line"></i> History</a>
+                <a href="architecturePage.html"><i class="ri-information-2-line"></i> Architecture</a>
+                <a href="securityTips.html"><i class="ri-lightbulb-line"></i> Security Tips</a>
+            </div>
+        </div>
+    </nav>
+    </header>
+
+    <main>
+        <section class = "page-header">
+            <a href="dashboard.html" class = "go-to-dashboard-button"><i class="ri-arrow-left-line"></i> Back to Dashboard</a>
+            <h1>Security Tips</h1>
+            <p>Essential knowledge for staying safe in the blockchain ecosystem</p>
+        </section>
+        <section class = "Grandma-Test">
+            <div>
+                <h2><i class="ri-shield-line"></i> Grandma Test</h2>
+                <p>A.E.G.I.S. is designed to pass the "Grandma Test" - meaning our security warnings and explanations are clear enough that your grandmother could understand them. We believe security shouldn't require a computer science degree.</p>
+                <p><b>Remember: </b>In Web3, there's no "undo button." Once a transaction is signed, it's permanent. That's why A.E.G.I.S. exists - to give you confidence and clarity before that final click.</p>
+            </div>
+        </section>
+        <section class="security-best-practices">
+            <div class="section-header"><h2>Security Best Practices</h2></div>
+
+            <div class = "security-best-practices-containers">
+                <div class="container-yellow">
+                <div class="item">
+                    <div class="icon"><i class="ri-error-warning-line"></i></div>
+                    <div class="text">
+                        <h3>Never Trust Unlimited Approvals</h3>
+                        <p>Legitimate dApps only request specific token amounts. If a contract asks for unlimited approval (uint256.max), it's likely a scam trying to drain your wallet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-yellow">
+                <div class="item">
+                    <div class="icon"><i class="ri-lock-line"></i></div>
+                    <div class="text">
+                        <h3>Verify Contract Addresses</h3>
+                        <p>Scammers create fake websites with lookalike domains. Always verify the contract address on official sources like the project's verified Twitter or Discord.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-purple">
+                <div class="item">
+                    <div class="icon"><i class="ri-hand-steering-line"></i></div>
+                    <div class="text">
+                        <h3>Understand What You're Signing</h3>
+                        <p>Never 'blind sign' transactions you don't understand. A.E.G.I.S. translates technical data into plain English so you always know what you're approving.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-purple">
+                <div class="item">
+                    <div class="icon"><i class="ri-shield-user-line"></i></div>
+                    <div class="text">
+                        <h3>Research Before Investing</h3>
+                        <p>Check if contracts are audited, read community reviews, and verify team credentials. High returns often come with high risks or are outright scams.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-yellow">
+                <div class="item">
+                    <div class="icon"><i class="ri-eye-line"></i></div>
+                    <div class="text">
+                        <h3>Beware of Urgency Tactics</h3>
+                        <p>Scammers create false urgency ('Mint ends in 1 hour!'). Legitimate projects give ample time. Never rush into transactions due to FOMO.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-purple">
+                <div class="item">
+                    <div class="icon"><i class="ri-question-line"></i></div>
+                    <div class="text">
+                        <h3>Use Hardware Wallets</h3>
+                        <p>For significant holdings, use hardware wallets like Ledger or Trezor. They provide an extra layer of protection by keeping your private keys offline.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-yellow">
+                <div class="item">
+                    <div class="icon"><i class="ri-refresh-line"></i></div>
+                    <div class="text">
+                        <h3>Watch for Honeypot Contracts</h3>
+                        <p>Some malicious contracts let you buy tokens but prevent selling. A.E.G.I.S. simulates transactions to detect these traps before you lose funds.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container-purple">
+                <div class="item">
+                    <div class="icon"><i class="ri-file-shield-line"></i></div>
+                    <div class="text">
+                        <h3>Regular Security Audits</h3>
+                        <p>Periodically review and revoke unnecessary token approvals. Use tools like Revoke.cash to manage permissions you've granted to contracts.</p>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        </section>
+
+        <section class="common-web3-threats">
+            <div class="section-header">
+                <h2>Common Web3 Threats</h2>
+            </div>
+
+            <div class="common-web3-threats-containers">
+                <div class="threat-single-container">
+                    <div class="threat-header">
+                        <div class="threat-title">
+                            <h3><i class="ri-spam-line"></i> Phishing Attacks</h3>
+                        </div>
+                        <div class="threat-subtitle">
+                            <p>Fake websites and contracts designed to steal your assets</p>
+                        </div>
+                    </div> <!-- Close threat-header -->
+
+                    <div class="threat-example">
+                        <div class="example-list">
+                            <p><i class="ri-lock-line"></i> Common Examples:</p>
+                            <ul class="no-bullets">
+                                <li>Lookalike domain names</li>
+                                <li>Cloned dApp interfaces</li>
+                                <li>Fake airdrop sites</li>
+                            </ul>
+                        </div>
+
+                        <div class="protect-list">
+                            <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
+                            <ul class="check-list">
+                                <li>Verify URLs carefully</li>
+                                <li>Use bookmarks for official sites</li>
+                                <li>Check Contract Addresses</li>
+                            </ul>
+                        </div>
+                    </div> <!-- Close threat-example -->
+                </div> <!-- Close threat-single-container -->
+
+
+                <!-- Continer 2-->
+                <div class="threat-single-container">
+                    <div class="threat-header">
+                        <div class="threat-title">
+                            <h3><i class="ri-spam-line"></i> Unlimited Approvals</h3>
+                        </div>
+                        <div class="threat-subtitle">
+                            <p>Malicious contracts requesting full access to your tokens</p>
+                        </div>
+                    </div> <!-- Close threat-header -->
+
+                    <div class="threat-example">
+                        <div class="example-list">
+                            <p><i class="ri-lock-line"></i> Common Examples:</p>
+                            <ul class="no-bullets">
+                                <li>uint256.max approval requests</li>
+                                <li>Unnecessary permission grants</li>
+                                <li>Hidden approval functions</li>
+                        </div>
+
+                        <div class="protect-list">
+                            <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
+                            <ul class="check-list">
+                                <li>Only approve specific amounts</li>
+                                <li>Regularly revoke old approvals</li>
+                                <li>Question why unlimited access is needed</li>
+                            </ul>
+                        </div>
+                    </div> <!-- Close threat-example -->
+                </div> <!-- Close threat-single-container --> 
+
+                <!-- Continer 3-->
+                <div class="threat-single-container">
+                    <div class="threat-header">
+                        <div class="threat-title">
+                            <h3><i class="ri-spam-line"></i> Rug Pulls</h3>
+                        </div>
+                        <div class="threat-subtitle">
+                            <p>Projects that drain liquidity and disappear</p>
+                        </div>
+                    </div> <!-- Close threat-header -->
+
+                    <div class="threat-example">
+                        <div class="example-list">
+                            <p><i class="ri-lock-line"></i> Common Examples:</p>
+                            <ul class="no-bullets">
+                                <li>Unlocked liquidity pools</li>
+                                <li>Anonymous team members</li>
+                                <li>No vesting periods</li>
+                            </ul>
+                        </div>
+
+                        <div class="protect-list">
+                            <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
+                            <ul class="check-list">
+                                <li>Research team credentials</li>
+                                <li>Check liquidity locks</li>
+                                <li>Verify tokenomics</li>
+                            </ul>
+                        </div>
+                    </div> <!-- Close threat-example -->
+                </div> <!-- Close threat-single-container --> 
+
+
+                <!-- Continer 4-->
+                <div class="threat-single-container">
+                    <div class="threat-header">
+                        <div class="threat-title">
+                            <h3><i class="ri-spam-line"></i> Honeypot Contracts</h3>
+                        <div class="threat-subtitle">
+                            <p>Tokens you can buy but can never sell</p>
+                        </div>
+                    </div> <!-- Close threat-header -->
+
+                    <div class="threat-example">
+                        <div class="example-list">
+                            <p><i class="ri-lock-line"></i> Common Examples:</p>
+                            <ul class="no-bullets">
+                                <li>Modified transfer functions</li>
+                                <li>Hidden selling restrictions</li>
+                                <li>Blacklist mechanisms</li>
+                            </ul>
+                        </div>
+
+                        <div class="protect-list">
+                            <p><i class="ri-lightbulb-line"></i> How to Protect:</p>
+                            <ul class="check-list">
+                                <li>Check contract code before buying</li>
+                                <li>Look for audit reports</li>
+                                <li>Test with small amounts first</li>
+                            </ul>
+                        </div>
+                    </div> <!-- Close threat-example -->
+                </div> <!-- Close threat-single-container --> 
+
+            </div> <!-- Close common-web3-threats-containers -->
+        </section> <!-- Close section -->
+
+        <section class="takeaways-section">  <!-- Fixed: "secion" → "section" -->
+            <div class="takeaways">
+                <p><i class="ri-lightbulb-line"></i> Key Takeaways</p>
+                <ul class="no-bullets">
+                    <li><b>Transaction Permanence:</b> Blockchain transactions cannot be reversed. Always verify before signing.</li>
+                    <li><b>Trust Verification:</b> Don't trust, verify. Check contracts, team credentials, and audit reports before interacting.</li>
+                    <li><b>Security Tools:</b> Use A.E.G.I.S. and similar tools to analyze transactions before signing. Prevention is better than cure.</li>
+                    <li><b>Community Knowledge:</b> Learn from others' mistakes. Follow security researchers and stay updated on new threats.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>footer lols</p>
+    </footer>
+        
+</body>
+<script src="script.js"></script>
+</html>
