@@ -28,5 +28,24 @@ function connectWallet(walletName) {
         connectBtn.style.color = "#39d98a";
 
         console.log(`${walletName} connected successfully.`);
+
+         fetchDashboardStats("0xA12F91AA001"); // Change this please kapag may wallet na
     }, 1200);
+}
+
+// lanz to -- adding dynamic data fetching for dashboard stats
+// so far: total scanned, threats blocked, approved, pending, protection rate
+async function fetchDashboardStats(walletAddress) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/stats/${walletAddress}`);
+        const data = await response.json();
+
+        document.getElementById('totalScanned').innerText = data.total_scanned;
+        document.getElementById('threatsBlocked').innerText = data.threats_blocked_today;
+        document.getElementById('approved').innerText = data.approved;
+        document.getElementById('pending').innerText = data.pending;
+        document.getElementById('rate').innerText = data.protection_rate + '%';
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+    }
 }
