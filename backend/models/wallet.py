@@ -4,12 +4,14 @@ from datetime import datetime
 
 
 class WalletUser(SQLModel, table=True):
+    __tablename__ = "wallet_user"
     wallet_address: str = Field(primary_key=True, max_length=50)
     created_timestamp: Optional[datetime] = None
     last_login: Optional[datetime] = None
 
 
 class UserTransaction(SQLModel, table=True):
+    __tablename__ = "user_transactions"
     transaction_hash: str = Field(primary_key=True, max_length=100)
     wallet_address: str = Field(max_length=50)
     chain_id: str = Field(max_length=20)
@@ -22,6 +24,7 @@ class UserTransaction(SQLModel, table=True):
 
 
 class UserThreatRecord(SQLModel, table=True):
+    __tablename__ = "user_threats_record"
     threat_id: Optional[int] = Field(default=None, primary_key=True)
     transaction_hash: str = Field(max_length=100)
     wallet_address: str = Field(max_length=50)

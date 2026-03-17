@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 class ContractRegistryCache(SQLModel, table=True):
+    __tablename__ = "contract_registry_cache"
     contract_address: str = Field(primary_key=True, max_length=50)
     is_verified: int
     tregistry_status: int
@@ -11,6 +12,7 @@ class ContractRegistryCache(SQLModel, table=True):
 
 
 class SimulationResult(SQLModel, table=True):
+    __tablename__ = "simulation_results"
     simulation_id: Optional[int] = Field(default=None, primary_key=True)
     transaction_hash: str = Field(max_length=100)
     simulation_summary: str = Field(max_length=255)
@@ -18,6 +20,7 @@ class SimulationResult(SQLModel, table=True):
 
 
 class AIAnalysis(SQLModel, table=True):
+    __tablename__ = "ai_analysis"
     analysis_id: Optional[int] = Field(default=None, primary_key=True)
     transaction_hash: str = Field(max_length=100)
     ai_summary: str = Field(max_length=255)
