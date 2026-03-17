@@ -51,7 +51,7 @@ async function connectWallet(walletName) {
 
         console.log(`${walletName} connected successfully.`);
 
-        fetchDashboardStats("0xA12F91AA001"); // Change this please kapag may wallet na
+        fetchDashboardStats(walletAddress); // Change this please kapag may wallet na
 
         await syncWallet(walletAddress);
     } catch (error) {
@@ -104,7 +104,7 @@ async function getNonce(walletAddress) {
     }
 }
 
-async function signMessage(walletAddres, nonce) {
+async function signMessage(walletAddress, nonce) {
     const message = `Login to AEGIS:\nNonce: ${nonce}`;
     const signature = await window.ethereum.request({
         method: "personal_sign",
@@ -114,7 +114,7 @@ async function signMessage(walletAddres, nonce) {
 }
 
 async function verifySignature(walletAddress, signature) {
-    const response = await fetch(`hhtp://127.0.0.1:8000/auth/verify`, {
+    const response = await fetch(`http://127.0.0.1:8000/auth/verify`, {
         method: 'POST',
         headers: {
             "Content-Type": "application/json"
