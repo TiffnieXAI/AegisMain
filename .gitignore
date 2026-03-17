@@ -3,3 +3,5 @@ venv/
 testing.sol
 artifacts/
 .states/
+/__pycache__/
+*.pyc
