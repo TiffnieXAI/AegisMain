@@ -1,18 +1,22 @@
 import json
 import secrets
+import requests  # for simulation
 from dbsettings import get_session
 from sqlmodel import Session, select
 from sqlalchemy import func
+from typing import Optional
+# needed lahat tong models for the crud endpoints
 from models.wallet import WalletUser, UserTransaction, UserThreatRecord
 from models.analysis import ContractRegistryCache, SimulationResult, AIAnalysis
 from models.session import AuthSession
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from web3 import Web3
 from substrateinterface import SubstrateInterface
-from eth_account.messages import encode_defunct
+from eth_account.messages import encode_defunct  # for signature verification
 from eth_account import Account
+# auto time date for some (for now, test purposes palang gamit)
 from datetime import datetime, timezone
 
 app = FastAPI()
@@ -22,7 +26,7 @@ MOONBASE_RPC = "https://rpc.api.moonbase.moonbeam.network"
 PEOPLE_CHAIN_RPC = "wss://polkadot-people-rpc.polkadot.io"
 
 # Deployed address from Remix
-CONTRACT_ADDRESS = "0x2192c59b98904bCc01D3b31607F041f32CA8b58C"
+CONTRACT_ADDRESS = "0x7ee027F48589687939b9Db9AaE017e31E8f1c711"
 
 # Load ABI
 try:
@@ -88,6 +92,81 @@ def get_polkadot_identity(address: str):
     except Exception as e:
         return {"verified": False, "error": f"Chain Query Error: {str(e)}"}
 
+    # simulation part from here
+
+
+def simulate_transaction(transaction):
+    url = MOONBASE_RPC
+
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "debug_traceCall",
+        "params": [{
+            "from": transaction.get("from"),
+            "to": transaction.get("to"),
+            "data": transaction.get("data", "0x"),
+            "value": hex(transaction.get("value", 0)),
+        },
+            "latest",
+            {
+            "tracer": "callTracer"
+        }
+        ],
+        "id": 1
+    }
+
+    try:
+        response = requests.post(url, json=payload).json()
+        return response.get("result", {})
+    except Exception as e:
+        return {"error": f"Simulation Error: {str(e)}"}
+
+
+def analyze_trace(trace):
+    effects = {
+        "transfers": [],
+        "approvals": [],
+        "contracts_interacted": set(),
+        "risk_flags": []
+    }
+
+    def recursive_trace(call):
+        if not call:
+            return
+
+        to = call.get("to")
+        input_data = call.get("input", "")
+        call_type = call.get("type")
+
+        if to:
+            effects["contracts_interacted"].add(to)
+
+        if input_data.startswith("0x095ea7b3"):  # approve
+            effects["approvals"].append({
+                "contract": to,
+                "raw": input_data
+            })
+
+        if input_data.startswith("0xa9059cbb"):  # transfer
+            effects["transfers"].append({
+                "contract": to,
+                "raw": input_data
+            })
+
+        if call_type == "DELEGATECALL":
+            effects["risk_flags"].append("DELEGATECALL")
+
+        # recurse
+        for sub in call.get("calls", []):
+            recursive_trace(sub)
+
+    recursive_trace(trace)
+
+    # convert set → list
+    effects["contracts_interacted"] = list(effects["contracts_interacted"])
+
+    return effects
+
 # --- API ENDPOINTS ---
 
 
@@ -98,10 +177,19 @@ async def root():
 
 @app.post("/analyze-intent")
 async def analyze_intent(tx_payload: TransactionRequest):
+    target_addr = tx_payload.to
+    # adding the simulation dito
+
+    trace = simulate_transaction({
+        "from": "0x9Fa19B5662DDecc1B6fd3183B0dC08ADb17a42d4",  # dummy sender for simulation
+        "to": target_addr,
+        "data": tx_payload.data,
+        "value": 100
+    })
+
+    effects = analyze_trace(trace)
 
     # The main engine: Checks Moonbeam Registry + Polkadot Identity.
-
-    target_addr = tx_payload.to
 
     # A. Check On-Chain Registry (Moonbeam)
     # 0=Unknown, 1=Safe, 2=Malicious
@@ -118,9 +206,12 @@ async def analyze_intent(tx_payload: TransactionRequest):
     identity = get_polkadot_identity(target_addr)
 
     # C. Final Response for RAG/Frontend
+    print("TRACE:", trace)
+    print("EFFECTS:", effects)
     return {
         "address": target_addr,
         "registry_status": verdict,
+        "effects": effects,
         "on_chain_identity": identity,
         "security_context": {
             "is_flagged": verdict == "Malicious",
@@ -216,8 +307,28 @@ def update_wallet(wallet_address: str, updated: WalletUser, session: Session = D
 
 
 @app.get("/transactions/")
-def get_transactions(session: Session = Depends(get_session)):
-    return session.query(UserTransaction).all()
+def get_transactions(
+    wallet_address: Optional[str] = Query(default=None),
+    status: Optional[int] = Query(default=None),
+    risk: Optional[int] = Query(default=None),
+    limit: int = Query(default=100),
+    session: Session = Depends(get_session)
+):
+    query = session.query(UserTransaction)
+    if wallet_address:
+        query = query.filter(UserTransaction.wallet_address == wallet_address)
+    if status is not None:
+        query = query.filter(UserTransaction.status == status)
+    if risk is not None:
+        query = query.filter(UserTransaction.risk_level == risk)
+    results = query.order_by(
+        UserTransaction.timestamp.desc()).limit(limit).all()
+    return {"transactions": results, "total": len(results)}
+
+
+@app.get("/transactions/{wallet_address}")
+def get_transactions_by_wallet(wallet_address: str, session: Session = Depends(get_session)):
+    return session.query(UserTransaction).filter(UserTransaction.wallet_address == wallet_address).all()
 
 
 @app.post("/transactions/")
@@ -231,6 +342,30 @@ def create_transaction(tx: UserTransaction, session: Session = Depends(get_sessi
     session.commit()
     session.refresh(tx)
     return tx
+
+
+@app.get("/transactions/{tx_hash}/detail")
+def get_transaction_by_hash(tx_hash: str, session: Session = Depends(get_session)):
+    tx = session.get(UserTransaction, tx_hash)
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return tx
+
+
+@app.patch("/transactions/{tx_hash}/status")
+def update_transaction_status(tx_hash: str, data: dict, session: Session = Depends(get_session)):
+    tx = session.get(UserTransaction, tx_hash)
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    new_status = data.get("status")
+    status_map = {"approved": 2, "pending": 1, "rejected": 0}
+    if new_status not in status_map:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid status. Must be one of: {list(status_map.keys())}")
+    tx.status = status_map[new_status]
+    session.add(tx)
+    session.commit()
+    return {"message": f"Transaction status updated to '{new_status}'", "transaction_hash": tx_hash}
 
 
 @app.delete("/transactions/{tx_hash}")
@@ -526,4 +661,4 @@ def verify_signature(data: dict, session: Session = Depends(get_session)):
         session.add(wallet)
 
     session.commit()
-    return {"message": "Authentication successful"}
+    return {"message": "Authentication successful", "wallet_address": wallet_address}
