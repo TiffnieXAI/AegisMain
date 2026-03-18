@@ -2594,3 +2594,374 @@ footer a {
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+
+/* Ensure modals are properly hidden by default */
+.modal {
+    display: none !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Show modal when active class is added */
+.modal.active {
+    display: flex !important;
+}
+
+/* Ensure modal content is visible and properly styled */
+.modal .modal-content {
+    background: #1e293b;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 20px;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    position: relative;
+    z-index: 10000;
+}
+
+/* Make sure the modal body is visible */
+.modal .modal-body {
+    padding: 2rem;
+    color: #e2e8f0;
+}
+
+/* Fix for any hidden elements in the modal */
+.security-warnings,
+.recommendations,
+.analysis-section,
+.metrics-grid {
+    display: block;
+    margin-bottom: 1.5rem;
+}
+
+/* Ensure the technical modal also displays correctly */
+.technical-modal .modal-content {
+    max-width: 800px;
+}
+
+.technical-pre {
+    background: #0f172a;
+    padding: 1.5rem;
+    border-radius: 8px;
+    color: #a5b4fc;
+    font-family: monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Fix for modal scrolling - remove sticky positioning */
+.modal .modal-header {
+    position: relative; /* Change from sticky to relative */
+    top: auto;
+    z-index: 10;
+    background: #1e293b;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.modal .modal-footer {
+    position: relative; /* Change from sticky to relative */
+    bottom: auto;
+    z-index: 10;
+    background: #1e293b;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Ensure modal content scrolls properly */
+.modal .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+/* Style improvements for the modal content */
+.risk-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #0f172a;
+    border-radius: 12px;
+    flex-wrap: wrap;
+}
+
+.risk-score-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(139, 92, 246, 0.15);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.risk-label {
+    color: #94a3b8;
+    font-family: var(--description-font);
+}
+
+.risk-value {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: var(--header-font);
+    color: #8b5cf6;
+}
+
+.severity-badge {
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.severity-badge.risk-critical {
+    background: rgba(255, 76, 76, 0.15);
+    color: #ff4c4c;
+    border: 1px solid rgba(255, 76, 76, 0.3);
+}
+
+.severity-badge.risk-high {
+    background: rgba(255, 179, 71, 0.15);
+    color: #ffb347;
+    border: 1px solid rgba(255, 179, 71, 0.3);
+}
+
+.severity-badge.risk-medium {
+    background: rgba(255, 179, 71, 0.15);
+    color: #ffb347;
+    border: 1px solid rgba(255, 179, 71, 0.3);
+}
+
+.severity-badge.risk-low {
+    background: rgba(77, 163, 255, 0.15);
+    color: #4da3ff;
+    border: 1px solid rgba(77, 163, 255, 0.3);
+}
+
+.severity-badge.risk-safe {
+    background: rgba(57, 217, 138, 0.15);
+    color: #39d98a;
+    border: 1px solid rgba(57, 217, 138, 0.3);
+}
+
+.status-badge {
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.approved {
+    background: rgba(57, 217, 138, 0.15);
+    color: #39d98a;
+    border: 1px solid rgba(57, 217, 138, 0.3);
+}
+
+.status-badge.rejected {
+    background: rgba(255, 76, 76, 0.15);
+    color: #ff4c4c;
+    border: 1px solid rgba(255, 76, 76, 0.3);
+}
+
+.contract-address {
+    background: #0f172a;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-family: var(--description-font);
+}
+
+.contract-address .label {
+    color: #94a3b8;
+}
+
+.contract-address code {
+    color: #8b5cf6;
+    flex: 1;
+    font-size: 0.9rem;
+    word-break: break-all;
+    background: rgba(139, 92, 246, 0.1);
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+}
+
+.copy-btn {
+    background: rgba(139, 92, 246, 0.1);
+    border: none;
+    color: #8b5cf6;
+    cursor: pointer;
+    padding: 0.3rem 0.8rem;
+    font-size: 1rem;
+    border-radius: 4px;
+}
+
+.copy-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+}
+
+.security-warnings {
+    background: rgba(255, 76, 76, 0.1);
+    border-left: 4px solid #ff4c4c;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.security-warnings h3 {
+    color: #ff4c4c;
+    font-family: var(--header-font);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.security-warnings ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #ffb3b3;
+    font-family: var(--description-font);
+}
+
+.security-warnings li {
+    margin-bottom: 0.5rem;
+}
+
+.recommendations {
+    background: rgba(77, 163, 255, 0.1);
+    border-left: 4px solid #4da3ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.recommendations h3 {
+    color: #4da3ff;
+    font-family: var(--header-font);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recommendations ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #b3d9ff;
+    font-family: var(--description-font);
+}
+
+.recommendations li {
+    margin-bottom: 0.5rem;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-card {
+    background: #0f172a;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.metric-label {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.metric-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
+    font-family: var(--header-font);
+}
+
+.metric-unit {
+    color: #64748b;
+    font-size: 0.7rem;
+    margin-left: 0.2rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    background: #1e293b;
+}
+
+.btn-technical {
+    background: transparent;
+    border: 1px solid #8b5cf6;
+    color: #8b5cf6;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--header-font);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-technical:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-report {
+    background: transparent;
+    border: 1px solid #94a3b8;
+    color: #94a3b8;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-approved {
+    background: #39d98a;
+    border: none;
+    color: #0f172a;
+    padding: 0.5rem 2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
