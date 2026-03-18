@@ -129,38 +129,6 @@ const sampleTransactions = [
     }
 ];
 
-// Add this temporary debugging code
-console.log('History.js loaded');
-
-// Debug function to check modal when "See More" is clicked
-const originalOpenModal = openTransactionModal;
-openTransactionModal = function(txId) {
-    console.log('Opening modal for transaction:', txId);
-    const transaction = sampleTransactions.find(tx => tx.id === txId);
-    console.log('Found transaction:', transaction);
-    
-    if (!transaction) {
-        console.error('Transaction not found!');
-        return;
-    }
-    
-    // Check if modal elements exist
-    console.log('Main modal element:', mainModal);
-    console.log('Modal elements:');
-    console.log('- modalTxId:', document.getElementById('modalTxId'));
-    console.log('- modalRiskScore:', document.getElementById('modalRiskScore'));
-    console.log('- modalSeverity:', document.getElementById('modalSeverity'));
-    
-    // Call the original function
-    originalOpenModal(txId);
-    
-    // Check if active class was added
-    setTimeout(() => {
-        console.log('Modal active class after opening:', mainModal.classList.contains('active'));
-        console.log('Modal display style:', window.getComputedStyle(mainModal).display);
-    }, 100);
-}
-
 // Global variables for current filter state
 let currentStatusFilter = 'all';
 let currentRiskFilter = 'all';
