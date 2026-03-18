@@ -32,11 +32,14 @@ function connectWallet(walletName) {
 }
 
 document.getElementById('simulate-btn').onclick = function() {
-    const riskScore = 55; // Change this value to test different ranges
+    const riskScore = 101; // Change this value to test different ranges
 
     // 1. Determine Rating and Color based on ranges
     let rating, ratingColor;
-    if (riskScore <= 20) {
+    if (riskScore <= 0) {
+        rating = "INVALID";
+        ratingColor = "#f97316";
+    } else if (riskScore <= 20) {
         rating = "SAFE";
         ratingColor = "#008a3e";
     } else if (riskScore <= 40) {
@@ -48,8 +51,11 @@ document.getElementById('simulate-btn').onclick = function() {
     } else if (riskScore <= 80) {
         rating = "HIGH";
         ratingColor = "#f97316";
-    } else {
+    } else if (riskScore <= 100) {
         rating = "CRITICAL";
+        ratingColor = "#f97316";
+    } else {
+        rating = "INVALID";
         ratingColor = "#d32f2f";
     }
 
