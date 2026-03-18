@@ -42,7 +42,11 @@ async function connectWallet(walletName) {
         const nonce = await getNonce(walletAddress);
         const signature = await signMessage(walletAddress, nonce);
         const verificationResult = await verifySignature(walletAddress, signature);
-
+        
+        if (verificationResult.message != 'Authentication successful') {
+            throw new Error('Signature verification failed');
+        }
+        console.log('Signature verified successfully.');
         // successfull connection proceeds
         statusText.innerHTML = `<span style="color: #39d98a;">● Connected to ${walletName}</span><br>Address: ${walletAddress}`;
         connectBtn.innerHTML = `<i class="ri-check-line"></i> Wallet Connected`;
@@ -96,6 +100,7 @@ async function getNonce(walletAddress) {
     try {
         const response = await fetch(`http://127.0.0.1:8000/auth/nonce/${walletAddress}`);
         const data = await response.json();
+        console.log('Verification Proceeding.');
         return data.nonce;
         }
     catch (error) {
@@ -114,7 +119,7 @@ async function signMessage(walletAddress, nonce) {
 }
 
 async function verifySignature(walletAddress, signature) {
-    const response = await fetch(`http://127.0.0.1:8000/auth/verify`, {
+    const response = await fetch(`http://127.0.0.1:8000/auth/verify/`, {
         method: 'POST',
         headers: {
             "Content-Type": "application/json"
@@ -124,6 +129,9 @@ async function verifySignature(walletAddress, signature) {
             signature: signature
         })
     });
-
-    return await response.json();
+    const data = await response.json();
+    // adding this para may persistence sa data
+    localStorage.setItem('walletAddress', data.wallet_address);
+    localStorage.setItem('authToken', signature);
+    return await data;
 }
