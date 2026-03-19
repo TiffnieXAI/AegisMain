@@ -5,7 +5,8 @@
   "description": "Intercepts and analyzes every Web3 transaction before MetaMask signs it.",
 
   "permissions": [
-    "storage"
+    "storage",
+    "alarms"
   ],
 
   "host_permissions": [

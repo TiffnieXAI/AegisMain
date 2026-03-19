@@ -1,13 +1,19 @@
 // background.js
-// Extension service worker — the only place that can reach your FastAPI backend
-// without CORS issues (extensions bypass CORS for declared host_permissions).
+
+// Keep the service worker alive — Chrome suspends it after ~30s of inactivity.
+// This dummy alarm wakes it up every 20 seconds.
+chrome.alarms.create('keepAlive', { periodInMinutes: 0.33 });
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "keepAlive") console.log("[A.E.G.I.S. bg] Keepalive ping.");
+});
+
+console.log("[A.E.G.I.S. bg] Service worker started.");
 
 const API_BASE = 'http://127.0.0.1:8000';
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!message.aegis || message.direction !== 'page-to-bg') return false;
 
-    // Handle async — must return true to keep the message channel open
     analyzeTransaction(message.txData)
         .then((analysis) => sendResponse({ analysis }))
         .catch((err)     => sendResponse({ error: err.message }));
@@ -23,7 +29,7 @@ async function analyzeTransaction(txData) {
             sender: txData.sender,
             to:     txData.to,
             data:   txData.data,
-            value:  txData.value,
+            value:  parseInt(txData.value ?? '0x0', 16),
         }),
     });
 
@@ -36,50 +42,89 @@ async function analyzeTransaction(txData) {
     const raw = await response.json();
     console.log('[A.E.G.I.S. bg] Raw response:', raw);
 
-    // ── DEBUG MODE: always safe, log the full shape ──────────────────────────
-    // Remove this block and return normalizeAnalysisResponse(raw) when ready
-    return {
-        safe:     true,
-        reason:   'DEBUG — check service worker console for raw shape',
-        severity: 'LOW',
-        title:    'Debug mode',
-        _raw:     raw,
-    };
-
-    // ── Production (uncomment when done inspecting) ──────────────────────────
-    // return normalizeAnalysisResponse(raw);
+    return normalizeAnalysisResponse(raw);
 }
 
+// ── Normalizer — field paths matched to the actual backend response shape ──────
+//
+// raw shape:
+// {
+//   target_address, sender_address,
+//   preflight:  { sender_balance_dev, sender_is_active, sender_tx_count },
+//   simulation: { success, reverted, revert_reason, gas_used, warnings,
+//                 warning_count, value_flows, opcode_flags, state_diff },
+//   analysis:   { warnings, warning_count, summary, high_risk, opcode_flags },
+//   history:    { past_transfers, past_approvals, sample_recipients },
+//   trust:      { registry: { status, is_flagged, is_verified_safe, error } }
+// }
+
 function normalizeAnalysisResponse(raw) {
-    const analysis   = raw.analysis   ?? {};
     const simulation = raw.simulation ?? {};
-    const preflight  = raw.preflight  ?? {};
+    const analysis   = raw.analysis   ?? {};
     const registry   = raw.trust?.registry ?? {};
 
+    // ── Safe / unsafe verdict ──────────────────────────────────────────────────
+    // Priority: simulation revert → analysis high_risk → registry flagged → safe
     const isSafe =
-        analysis.safe       !== undefined ? Boolean(analysis.safe)       :
-        simulation.reverted !== undefined ? !simulation.reverted          :
-        preflight.passed    !== undefined ? Boolean(preflight.passed)     :
+        simulation.reverted      ? false :
+        analysis.high_risk       ? false :
+        registry.is_flagged      ? false :
         true;
 
+    // ── Severity ───────────────────────────────────────────────────────────────
+    const severity =
+        registry.is_flagged                           ? 'CRITICAL' :
+        simulation.reverted || analysis.high_risk     ? 'HIGH'     :
+        (simulation.warning_count > 0 ||
+         analysis.warning_count   > 0)                ? 'MEDIUM'   :
+        'LOW';
+
+    // ── Human-readable reason ──────────────────────────────────────────────────
     const reasons = [
-        analysis.reason      ?? analysis.verdict  ?? null,
-        simulation.revert_reason                  ?? null,
-        preflight.warning                         ?? null,
-        registry.flagged
-            ? `Flagged in trust registry: ${registry.label ?? 'unknown'}`
+        simulation.reverted && simulation.revert_reason
+            ? 'Simulation reverted: ' + simulation.revert_reason
+            : null,
+        analysis.high_risk
+            ? 'High risk detected by analysis'
+            : null,
+        ...(analysis.warnings  ?? []).map(w => typeof w === 'string' ? w : w.message ?? w.msg ?? JSON.stringify(w)),
+        ...(simulation.warnings ?? []).map(w => typeof w === 'string' ? w : w.message ?? w.msg ?? JSON.stringify(w)),
+        registry.is_flagged
+            ? 'Contract flagged in trust registry (status: ' + registry.status + ')'
             : null,
     ].filter(Boolean);
 
-    const severity =
-        analysis.severity ??
-        (registry.flagged ? 'CRITICAL' : !isSafe ? 'HIGH' : 'LOW');
+    // ── Title ──────────────────────────────────────────────────────────────────
+    const title =
+        simulation.reverted  ? 'Transaction would revert'      :
+        analysis.high_risk   ? 'High risk transaction detected' :
+        registry.is_flagged  ? 'Flagged contract'               :
+        'Transaction looks safe';
 
     return {
         safe:     isSafe,
+        severity: severity,
+        title:    title,
         reason:   reasons.join(' — ') || (isSafe ? 'No issues detected.' : 'Transaction flagged.'),
-        severity: severity.toUpperCase(),
-        title:    analysis.title ?? (isSafe ? 'Transaction Cleared' : 'Threat Detected'),
-        _raw:     raw,
+        // Extra fields for the dashboard threat popup detail rows
+        simulation_summary: {
+            gas_used:      simulation.gas_used,
+            gas_cost:      simulation.gas_cost?.formatted,
+            warning_count: simulation.warning_count,
+            reverted:      simulation.reverted,
+            revert_reason: simulation.revert_reason,
+        },
+        analysis_summary: {
+            warning_count: analysis.warning_count,
+            high_risk:     analysis.high_risk,
+            warnings:      analysis.warnings,
+            summary:       analysis.summary,
+        },
+        registry_summary: {
+            status:       registry.status,
+            is_flagged:   registry.is_flagged,
+            is_verified:  registry.is_verified_safe,
+        },
+        _raw: raw,
     };
 }
