@@ -2034,8 +2034,8 @@ footer a {
 
 /* history footer */
 .history-footer {
-    margin-top: 3rem;
-    padding-top: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
     border-top: 1px solid #262e45;
     display: flex;
     justify-content: space-between;

@@ -40,7 +40,7 @@ document.getElementById('simulate-btn').onclick = function() {
         contractShort: "0xUni...uter02",
         from: "0x1a2b3c4d5e6f7g8h9i0j",
         fromShort: "0x1a2b...9i0j",
-        riskScore: 78,
+        riskScore: 99,
         riskLevel: "high",
         timestamp: new Date().toISOString(),
         gasUsed: "189,450",
@@ -71,7 +71,10 @@ document.getElementById('simulate-btn').onclick = function() {
 
     // Determine rating and color based on risk score
     let rating, ratingColor;
-    if (sampleTransaction.riskScore <= 20) {
+    if (sampleTransaction.riskScore < 0) {
+        rating = "UNKNOWN";
+        ratingColor = "#8100D1";
+    } else if (sampleTransaction.riskScore <= 20) {
         rating = "SAFE";
         ratingColor = "#008a3e";
     } else if (sampleTransaction.riskScore <= 40) {
@@ -83,9 +86,12 @@ document.getElementById('simulate-btn').onclick = function() {
     } else if (sampleTransaction.riskScore <= 80) {
         rating = "HIGH";
         ratingColor = "#f97316";
-    } else {
+    } else if (sampleTransaction.riskScore <= 100) {
         rating = "CRITICAL";
         ratingColor = "#d32f2f";
+    } else {
+        rating = "UNKNOWN";
+        ratingColor = "#8100D1";
     }
 
     // Get trust badge
@@ -366,7 +372,6 @@ document.getElementById('simulate-btn').onclick = function() {
         confirmOverlay.innerHTML = `
             <div style="background: #1e293b; width: 380px; padding: 24px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 1px solid rgba(139, 92, 246, 0.3);">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                    <div style="color: #d32f2f; font-size: 20px; background: #fee2e2; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</div>
                     <h3 style="margin: 0; font-size: 18px; color: #ffffff;">Confirm Rejection</h3>
                 </div>
                 <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
@@ -410,7 +415,6 @@ document.getElementById('simulate-btn').onclick = function() {
             confirmOverlay.innerHTML = `
                 <div style="background: #1e293b; width: 400px; padding: 24px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 1px solid rgba(139, 92, 246, 0.3);">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                        <div style="color: #008a3e; font-size: 20px; background: #f0fdf4; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✓</div>
                         <h3 style="margin: 0; font-size: 18px; color: #ffffff;">Confirm Approval</h3>
                     </div>
                     <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 16px;">You are about to approve the following transaction:</p>
