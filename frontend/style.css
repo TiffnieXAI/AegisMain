@@ -226,6 +226,19 @@ button:hover {
     margin-bottom: 1.25rem;
 }
 
+.sign_btn {
+    display: flex;
+    gap: 15px; /* Adjust this value for more or less space */
+    justify-content: center; /* Optional: centers the buttons horizontally */
+}
+
+.sign_btn button {
+    border-radius: 20px;
+    font-family: var(--header-font);
+    padding: 10px 20px; /* Gives the button some "breathing room" inside */
+    cursor: pointer;
+}
+
 .site-name {
     font-family: var(--title-font);
     font-size: 2.75rem;
@@ -598,8 +611,8 @@ footer {
 footer h2 {
     font-size: 1.5rem;
     margin: 0 0 1.5rem 0;
-    color: #fff;
     font-family: var(--header-font);
+    color: #7d89b5;
 }
 
 footer ul {
@@ -612,7 +625,7 @@ footer ul {
 
 footer li {
     font-size: 1rem;
-    color: #cbd5e1;
+    color: #7d89b5;
     transition: color 0.3s;
     cursor: pointer;
 }
@@ -624,7 +637,7 @@ footer li:hover {
 footer a {
     text-decoration: none;
     font-size: 1rem;
-    color: #cbd5e1;
+    color: #7d89b5;
     transition: color 0.3s;
     cursor: pointer;
 }
