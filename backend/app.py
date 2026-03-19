@@ -230,24 +230,8 @@ def decode_calldata(data: str, contract_address: str) -> dict:
         ),
     }
 
-
-# =============================================================
-# LAYER 2 — HARDHAT FORK SIMULATION
-#
-# Replaces the previous Ape-based simulation.  No C extensions
-# required — contributors only need Node.js + npm install.
-#
-# Architecture:
-#   Python fetches real on-chain state (balances, storage slots).
-#   It writes a params JSON to a temp file, then calls:
-#       npx hardhat run scripts/simulate.js --network hardhat
-#   inside the hardhat_sim/ directory, with two env vars pointing
-#   at the params file and the desired output file.
-#   The Node script forks the live chain, seeds state, executes
-#   the tx, and writes a result JSON which Python reads back.
-# =============================================================
-
 # layer 2 - hardhat simulation, works fine pero need ng node
+
 
 def get_storage_slot(holder: str, mapping_slot: int = 0) -> int:
     return int(Web3.keccak(
@@ -428,15 +412,12 @@ def _fallback_gas_estimate(
 
 
 def decode_events(raw_logs: list, contract_address: str) -> list:
-    """
-    Decodes raw event logs into human-readable format.
-    Handles Transfer, Approval, ApprovalForAll.
-    Unknown events are included as-is for the AI pipeline.
-    """
     TRANSFER_TOPIC = w3.keccak(text="Transfer(address,address,uint256)").hex()
     APPROVAL_TOPIC = w3.keccak(text="Approval(address,address,uint256)").hex()
     APPROVAL_ALL_TOPIC = w3.keccak(
         text="ApprovalForAll(address,address,bool)").hex()
+
+    UINT256_MAX = (2 ** 256) - 1
 
     decoded = []
     decimals = get_token_decimals(contract_address)
@@ -448,10 +429,14 @@ def decode_events(raw_logs: list, contract_address: str) -> list:
         topic0 = topics[0] if topics[0].startswith("0x") else "0x" + topics[0]
 
         try:
-            if topic0 == TRANSFER_TOPIC and len(topics) >= 3:
-                from_addr = "0x" + topics[1][-40:]
-                to_addr = "0x" + topics[2][-40:]
-                amount_raw = int(log["data"], 16) if log["data"] != "0x" else 0
+            if topic0 == TRANSFER_TOPIC:
+                # Need at least topic0 + 2 indexed args
+                from_addr = ("0x" + topics[1][-40:]
+                             ) if len(topics) > 1 else "unknown"
+                to_addr = ("0x" + topics[2][-40:]
+                           ) if len(topics) > 2 else "unknown"
+                amount_raw = int(log["data"], 16) if log.get(
+                    "data", "0x") != "0x" else 0
                 decoded.append({
                     "event":  "Transfer",
                     "from":   from_addr,
@@ -459,34 +444,46 @@ def decode_events(raw_logs: list, contract_address: str) -> list:
                     "amount": format_amount(amount_raw, decimals),
                 })
 
-            elif topic0 == APPROVAL_TOPIC and len(topics) >= 3:
-                owner = "0x" + topics[1][-40:]
-                spender = "0x" + topics[2][-40:]
-                amount_raw = int(log["data"], 16) if log["data"] != "0x" else 0
+            elif topic0 == APPROVAL_TOPIC:
+                owner = ("0x" + topics[1][-40:]
+                         ) if len(topics) > 1 else "unknown"
+                spender = ("0x" + topics[2][-40:]
+                           ) if len(topics) > 2 else "unknown"
+                amount_raw = int(log["data"], 16) if log.get(
+                    "data", "0x") != "0x" else 0
+
+                # Flag unlimited approvals explicitly
+                is_unlimited = (amount_raw >= UINT256_MAX)
+
                 decoded.append({
-                    "event":   "Approval",
-                    "owner":   owner,
-                    "spender": spender,
-                    "amount":  format_amount(amount_raw, decimals),
+                    "event":        "Approval",
+                    "owner":        owner,
+                    "spender":      spender,
+                    "amount":       format_amount(amount_raw, decimals),
+                    "is_unlimited": is_unlimited,
+                    "warning":      "UNLIMITED APPROVAL — spender can drain all tokens" if is_unlimited else None,
                 })
 
-            elif topic0 == APPROVAL_ALL_TOPIC and len(topics) >= 3:
-                owner = "0x" + topics[1][-40:]
-                operator = "0x" + topics[2][-40:]
-                approved = bool(int(log["data"], 16)
-                                ) if log["data"] != "0x" else False
+            elif topic0 == APPROVAL_ALL_TOPIC:
+                owner = ("0x" + topics[1][-40:]
+                         ) if len(topics) > 1 else "unknown"
+                operator = ("0x" + topics[2][-40:]
+                            ) if len(topics) > 2 else "unknown"
+                approved = bool(int(log["data"], 16)) if log.get(
+                    "data", "0x") != "0x" else False
                 decoded.append({
                     "event":    "ApprovalForAll",
                     "owner":    owner,
                     "operator": operator,
                     "approved": approved,
+                    "warning":  "FULL NFT COLLECTION APPROVAL — operator can transfer all NFTs" if approved else None,
                 })
 
             else:
                 decoded.append({
                     "event":    "unknown",
                     "topic":    topic0,
-                    "raw_data": log["data"],
+                    "raw_data": log.get("data", "0x"),
                 })
 
         except Exception:
