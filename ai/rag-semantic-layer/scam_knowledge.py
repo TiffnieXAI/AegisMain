@@ -8,8 +8,6 @@ Curated scam detection patterns built from:
   - DEXTools rug pull checklist 2026
   - Real drainer kit mechanics: Monkey Drainer, Inferno Drainer, Angel Drainer, Pink Drainer
 
-Category: "scam" (separate from "vulnerability" and "intelligence")
-
 To ingest:
     python scam_knowledge.py --ingest
 """

@@ -75,8 +75,6 @@ STANDARD_SOURCES = [
     },
 ]
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -127,7 +125,6 @@ def read_solidity(path: str) -> str:
         return fh.read()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # ChromaDB client + collection
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -149,8 +146,7 @@ def get_embedder() -> SentenceTransformer:
     return SentenceTransformer(EMBED_MODEL)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Ingestion: Standards (Solidity interfaces)
+# Ingestion: Standards (Solidity interfaces [IERC20 & ERC721])
 # ─────────────────────────────────────────────────────────────────────────────
 
 def ingest_standards(collection: chromadb.Collection, embedder: SentenceTransformer) -> None:
@@ -188,7 +184,6 @@ def ingest_standards(collection: chromadb.Collection, embedder: SentenceTransfor
     log.info("Standards ingestion complete: %d chunks.", total)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Ingestion: Vulnerabilities (OpenZeppelin PDF audits)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -235,8 +230,7 @@ def ingest_audits(collection: chromadb.Collection, embedder: SentenceTransformer
     log.info("Audit ingestion complete: %d high-severity chunks.", total)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Intelligence: REKT News weekly scraper (placeholder)
+# Intelligence: REKT News weekly scraper 
 # ─────────────────────────────────────────────────────────────────────────────
 
 def ingest_rekt_intelligence(
@@ -270,7 +264,6 @@ def ingest_rekt_intelligence(
         log.error("  ✗ REKT scrape failed: %s", exc)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CLI entry-point
 # ─────────────────────────────────────────────────────────────────────────────
 

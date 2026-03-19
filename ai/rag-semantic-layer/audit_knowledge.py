@@ -241,6 +241,85 @@ CURATED_FINDINGS = [
             "as this creates a window for malicious share minting at below-market cost."
         ),
     },
+    # ── setApprovalForAll phishing pattern ───────────────────────────────────
+    {
+        "id":       "pattern_set_approval_for_all",
+        "source":   "AEGIS Security Patterns",
+        "version":  "1.0",
+        "severity": "high",
+        "finding":  "P-01",
+        "title":    "setApprovalForAll phishing — unlimited NFT operator approval",
+        "text": (
+            "P-01 setApprovalForAll phishing attack pattern. "
+            "setApprovalForAll(address operator, bool approved) grants an operator "
+            "UNLIMITED control over ALL NFT tokens owned by the caller. "
+            "Unlike approve() which is per-token, setApprovalForAll gives the operator "
+            "permission to transfer every token in the collection without further consent. "
+            "Common phishing vector: malicious dApps disguise setApprovalForAll calls as "
+            "airdrop claims, game interactions, or NFT marketplace listings. "
+            "Once approved, the attacker can drain the entire NFT portfolio in a single transaction. "
+            "The operator address in phishing attacks is typically a freshly deployed contract "
+            "with no verified source code. "
+            "This pattern was the root cause of the 2022 OpenSea phishing wave and numerous "
+            "subsequent NFT drainer attacks. "
+            "Risk indicators: unknown operator address, recently deployed contract, "
+            "no prior interaction history, approval requested during airdrop or claim flow."
+        ),
+    },
+
+    # ── Reentrancy attack pattern ─────────────────────────────────────────────
+    {
+        "id":       "pattern_reentrancy",
+        "source":   "AEGIS Security Patterns",
+        "version":  "1.0",
+        "severity": "high",
+        "finding":  "P-02",
+        "title":    "Reentrancy attack — external call before state update",
+        "text": (
+            "P-02 Reentrancy attack pattern. "
+            "Reentrancy occurs when a contract makes an external call to another contract "
+            "before updating its own internal state. "
+            "The external contract can call back into the original function before the first "
+            "execution completes, exploiting the stale state. "
+            "Classic pattern: withdraw() sends ETH before updating balance — attacker's "
+            "fallback function calls withdraw() again recursively, draining funds. "
+            "ERC721 reentrancy: safeTransferFrom triggers onERC721Received callback, "
+            "which can re-enter the calling contract before mint or balance accounting finishes. "
+            "ERC3525 reentrancy: semi-fungible token transfers trigger callbacks that fire "
+            "before the books are balanced, enabling double-minting. "
+            "The Solv Protocol exploit (March 2026) used this exact pattern: "
+            "135 BRO tokens in, 567 million out across 22 recursive loops in one transaction. "
+            "The DAO hack (2016), Cream Finance, and Reentrancy Guard bypasses all follow "
+            "this same check-effects-interactions violation pattern. "
+            "Detection: external calls before state updates, recursive call loops, "
+            "balance changes disproportionate to input."
+        ),
+    },
+
+    # ── Fake airdrop / claimAirdrop drain pattern ─────────────────────────────
+    {
+        "id":       "pattern_fake_airdrop",
+        "source":   "AEGIS Security Patterns",
+        "version":  "1.0",
+        "severity": "high",
+        "finding":  "P-03",
+        "title":    "Fake airdrop drain — claimAirdrop disguises asset theft",
+        "text": (
+            "P-03 Fake airdrop and claim phishing pattern. "
+            "Attackers deploy contracts with function names like claimAirdrop(), claim(), "
+            "mint(), or getReward() that appear to give tokens to the caller. "
+            "In reality the transaction simulation shows assets LEAVING the user wallet "
+            "and/or setApprovalForAll being granted to the attacker address. "
+            "Critical mismatch indicator: function name implies receiving tokens but "
+            "state changes show transfers FROM the user or approvals SET on user assets. "
+            "This is the most common NFT phishing vector in 2023-2026. "
+            "Variants include: fake OpenSea offers, fake mint pages, Discord compromise "
+            "links, and Twitter/X phishing bots promoting fake airdrops. "
+            "The attack requires only one signed transaction to drain the entire wallet. "
+            "Detection: claimAirdrop/claim/mint function paired with "
+            "ERC721 transfer FROM user address or setApprovalForAll action in simulation."
+        ),
+    },
 ]
 
 

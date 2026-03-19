@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 CHROMA_PATH        = "./aegis_db"
 COLLECTION_NAME    = "library_of_truth"
 EMBED_MODEL        = "all-MiniLM-L6-v2"
-MIN_CONFIDENCE     = 0.63          # below this → "No specific match found"
+MIN_CONFIDENCE     = 0.68          # below this → "No specific match found"
 N_SCAM_HITS        = 2
 N_STANDARD_HITS    = 1
 N_VULN_HITS        = 2
@@ -81,7 +81,7 @@ app.add_middleware(
 # Pydantic schemas
 # ─────────────────────────────────────────────────────────────────────────────
 
-# This is the raw input from the Polkadot extension simulation layer, which may be noisy and unstructured. The analysis engine will process this and attempt to match it against known patterns in the RAG knowledge base.
+# This is the raw input from the simulation layer, which may be noisy and unstructured. The analysis engine will process this and attempt to match it against known patterns in the RAG knowledge base.
 class SimulationReport(BaseModel):
     """Raw transaction intent from the Polkadot extension simulation layer."""
     transaction_intent: str = Field(
