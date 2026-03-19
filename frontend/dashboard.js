@@ -398,10 +398,9 @@ function showRejectionModal(mainOverlay) {
     modal.innerHTML = `
         <div style="background: #1e293b; width: 400px; padding: 24px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); font-family: 'Inter', sans-serif;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                <div style="color: #d32f2f; font-size: 24px; background: #fee2e2; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</div>
-                <h3 style="margin: 0; font-size: 18px; color: #111827;">Confirm Transaction Rejection</h3>
+                <h3 style="margin: 0; font-size: 18px; color: #e2e8f0;">Confirm Transaction Rejection</h3>
             </div>
-            <p style="color: #4b5563; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
+            <p style="color: #9CA3AF; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
                 Are you sure you want to reject this transaction? This action cannot be undone and the request will be cancelled.
             </p>
             <div style="display: flex; gap: 12px;">
@@ -427,10 +426,9 @@ function showApprovalModal(mainOverlay, rating, ratingColor) {
     modal.innerHTML = `
         <div style="background: #1e293b; width: 400px; padding: 24px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); font-family: 'Inter', sans-serif;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                <div style="color: #008a3e; font-size: 24px; background: #f0fdf4; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✔</div>
-                <h3 style="margin: 0; font-size: 18px; color: #ffffff;">Final Confirmation</h3>
+                <h3 style="margin: 0; font-size: 18px; color: #e2e8f0;">Final Confirmation</h3>
             </div>
-            <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 16px;">You are about to approve the following transaction:</p>
+            <p style="color: #9CA3AF; font-size: 14px; margin-bottom: 16px;">You are about to approve the following transaction:</p>
             <div style="background: #0f172a; padding: 16px; border-radius: 12px; font-size: 13px; line-height: 1.8; border: 1px solid #334155;">
                 <span style="color: #64748b;">Function:</span> <strong style="color: #ffffff;">transfer</strong><br>
                 <span style="color: #64748b;">Risk Level:</span> <span style="background: ${ratingColor}; color: ${rating === 'MEDIUM' ? '#1e293b' : 'white'}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${rating}</span><br>
