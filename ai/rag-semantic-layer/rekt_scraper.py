@@ -57,8 +57,16 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
+REKT_BOILERPLATE = [
+    "rekt serves as a public platform",
+    "donate (eth",
+    "donate (eth/erc20)",
+    "0x3c5c2f4bcec51a36494682f91dbc6ca7c63b514c",
+    "all content copyright",
+    "run by rekthq",
+    "founded by julien",
+]
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Data model
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -75,7 +83,6 @@ class RektArticle:
     amount_lost: Optional[str] = None   # extracted dollar figure if present
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # HTTP client
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -87,7 +94,6 @@ def make_client() -> httpx.Client:
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Index page scraper  (rekt.news/?page=N)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -181,7 +187,6 @@ def scrape_index_page(client: httpx.Client, page: int) -> list[dict]:
     return articles
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Full article scraper
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -209,6 +214,9 @@ def scrape_article(client: httpx.Client, stub: dict) -> Optional[RektArticle]:
         text = el.get_text(" ", strip=True)
         if not text or len(text) < 30:
             continue
+        # Filter out common boilerplate phrases that add noise to embeddings
+        if any(bp in text.lower() for bp in REKT_BOILERPLATE):
+            continue
         body_parts.append(text)
 
     body = "\n\n".join(body_parts)
@@ -230,7 +238,6 @@ def scrape_article(client: httpx.Client, stub: dict) -> Optional[RektArticle]:
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # ChromaDB helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -303,7 +310,6 @@ def upsert_article(
     return len(ids)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Main orchestrator
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -348,7 +354,7 @@ def run_scraper(
     )
 
     stats = {"articles_found": 0, "articles_stored": 0, "chunks_stored": 0}
-    
+
     _seen_slugs: set[str] = set()
 
     with make_client() as client:
@@ -417,7 +423,6 @@ def run_scraper(
     return stats
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Drop-in replacement for ingest.py's placeholder function
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -439,7 +444,6 @@ def ingest_rekt_intelligence(
     run_scraper(since_days=since_days, max_pages=5)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
