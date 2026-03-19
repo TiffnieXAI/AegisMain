@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 import ast
 import sys
@@ -28,10 +29,38 @@ app = FastAPI()
 
 # Swap to Westend Hub before passing?:
 #   CHAIN_RPC = "https://westend-asset-hub-eth-rpc.polkadot.io"
-#   CHAIN_CURRENCY = "WND"
 MOONBASE_RPC = "https://rpc.api.moonbase.moonbeam.network"
-CHAIN_CURRENCY = "DEV"
 PEOPLE_CHAIN_RPC = "wss://polkadot-people-rpc.polkadot.io"
+
+
+_CHAIN_CURRENCY_MAP: dict[int, str] = {
+    1:        "ETH",    # Ethereum Mainnet
+    5:        "ETH",    # Goerli testnet
+    11155111: "ETH",    # Sepolia testnet
+    137:      "POL",    # Polygon Mainnet
+    80001:    "POL",    # Mumbai testnet (Polygon)
+    56:       "BNB",    # BNB Smart Chain
+    97:       "BNB",    # BNB testnet
+    43114:    "AVAX",   # Avalanche C-Chain
+    42161:    "ETH",    # Arbitrum One
+    10:       "ETH",    # Optimism
+    8453:     "ETH",    # Base
+    1284:     "GLMR",   # Moonbeam
+    1285:     "MOVR",   # Moonriver
+    1287:     "DEV",    # Moonbase Alpha (testnet)
+    1337:     "ETH",    # Hardhat / Ganache local
+    420420421: "WND",   # Westend Asset Hub
+}
+
+
+def _detect_chain_currency(web3_instance: "Web3") -> str:
+    """Detect the native token symbol from the connected chain's ID."""
+    try:
+        chain_id = web3_instance.eth.chain_id
+        return _CHAIN_CURRENCY_MAP.get(chain_id, "ETH")
+    except Exception:
+        return "ETH"
+
 
 # Deployed address from Remix
 # iniba ko name kalito eh
@@ -55,6 +84,8 @@ except FileNotFoundError:
 w3 = Web3(Web3.HTTPProvider(MOONBASE_RPC))
 registry_contract = w3.eth.contract(
     address=REGISTRY_ADDRESS, abi=REGISTRY_ABI)
+
+CHAIN_CURRENCY = _detect_chain_currency(w3)
 
 # CORS middleware here (frontend integration ito)
 app.add_middleware(
@@ -94,17 +125,78 @@ KNOWN_SELECTORS = {
 APPROVAL_SELECTORS = {"095ea7b3", "39509351", "a22cb465"}
 TRANSFER_SELECTORS = {"a9059cbb", "23b872dd", "42842e0e", "b88d4fde"}
 
+# Expanded topic database — covers most DeFi/NFT events
+KNOWN_TOPICS = {
+    "0x" + w3.keccak(text="Transfer(address,address,uint256)").hex():
+        {"name": "Transfer",          "type": "erc20"},
+    "0x" + w3.keccak(text="Approval(address,address,uint256)").hex():
+        {"name": "Approval",          "type": "erc20"},
+    "0x" + w3.keccak(text="ApprovalForAll(address,address,bool)").hex():
+        {"name": "ApprovalForAll",    "type": "erc721"},
+    "0x" + w3.keccak(text="Transfer(address,address,uint256,uint256)").hex():
+        {"name": "TransferSingle",    "type": "erc1155"},
+    "0x" + w3.keccak(text="TransferBatch(address,address,address,uint256[],uint256[])").hex():
+        {"name": "TransferBatch",     "type": "erc1155"},
+    "0x" + w3.keccak(text="Deposit(address,uint256)").hex():
+        {"name": "Deposit",           "type": "defi"},
+    "0x" + w3.keccak(text="Withdrawal(address,uint256)").hex():
+        {"name": "Withdrawal",        "type": "defi"},
+    "0x" + w3.keccak(text="Swap(address,uint256,uint256,uint256,uint256,address)").hex():
+        {"name": "Swap",              "type": "dex"},
+    "0x" + w3.keccak(text="OwnershipTransferred(address,address)").hex():
+        {"name": "OwnershipTransferred", "type": "admin"},
+    "0x" + w3.keccak(text="Upgraded(address)").hex():
+        {"name": "Upgraded",          "type": "proxy"},
+    "0x" + w3.keccak(text="AdminChanged(address,address)").hex():
+        {"name": "AdminChanged",      "type": "proxy"},
+    "0x" + w3.keccak(text="Paused(address)").hex():
+        {"name": "Paused",            "type": "admin"},
+    "0x" + w3.keccak(text="Unpaused(address)").hex():
+        {"name": "Unpaused",          "type": "admin"},
+}
 
-# token formating function, pwede lipat another file
+UINT256_MAX = (2 ** 256) - 1
 
-def format_amount(raw: int, decimals: int = 18) -> dict:
+
+# token formatting function, pwede lipat another file
+
+def format_amount(raw: int, decimals: int = 18, symbol: str | None = None) -> dict:
+    """Format a raw wei/token amount.
+
+    Args:
+        raw:      The raw integer amount (in the smallest unit, e.g. wei).
+        decimals: Token decimal places (default 18).
+        symbol:   Override the display symbol. Falls back to CHAIN_CURRENCY
+                  so native-token amounts auto-label correctly per chain.
+    """
     divisor = Decimal(10 ** decimals)
     human = Decimal(raw) / divisor
+    display_symbol = symbol if symbol is not None else CHAIN_CURRENCY
     return {
         "raw": raw,
         "human": float(human),
-        "formatted": f"{human:.6f} {CHAIN_CURRENCY}",
+        "formatted": f"{human:.6f} {display_symbol}",
     }
+
+
+def get_token_symbol(token_address: str) -> str:
+    """Fetch the ERC-20 symbol for a contract address.
+    Falls back to CHAIN_CURRENCY (native token) on any error,
+    so plain ETH/DEV/etc. transfers still label correctly.
+    """
+    SYMBOL_ABI = [{
+        "inputs": [], "name": "symbol",
+        "outputs": [{"type": "string"}],
+        "stateMutability": "view", "type": "function"
+    }]
+    try:
+        token = w3.eth.contract(
+            address=Web3.to_checksum_address(token_address),
+            abi=SYMBOL_ABI
+        )
+        return token.functions.symbol().call()
+    except Exception:
+        return CHAIN_CURRENCY
 
 
 def get_token_decimals(token_address: str) -> int:
@@ -165,13 +257,14 @@ def decode_calldata(data: str, contract_address: str) -> dict:
 
         try:
             decimals = get_token_decimals(contract_address)
+            symbol = get_token_symbol(contract_address)
 
             if selector in {"a9059cbb", "095ea7b3", "39509351"}:
                 recipient = "0x" + data[34:74]
                 amount_raw = int(data[74:138], 16)
                 result["args"] = {
                     "recipient_or_spender": recipient,
-                    "amount": format_amount(amount_raw, decimals),
+                    "amount": format_amount(amount_raw, decimals, symbol),
                 }
 
             elif selector == "23b872dd":
@@ -181,7 +274,7 @@ def decode_calldata(data: str, contract_address: str) -> dict:
                 result["args"] = {
                     "from": from_addr,
                     "to": to_addr,
-                    "amount": format_amount(amount_raw, decimals),
+                    "amount": format_amount(amount_raw, decimals, symbol),
                 }
 
             elif selector == "a22cb465":
@@ -335,29 +428,42 @@ def simulate_with_hardhat(sender: str, to: str, data: str, value: int = 0) -> di
                 pass
 
     decimals = get_token_decimals(checksum_to)
-    dev_before = int(sim_raw.get("dev_before", "0"))
-    dev_after = int(sim_raw.get("dev_after",  "0"))
+    native_before = int(sim_raw.get("sender_eth_before", "0"))
+    native_after = int(sim_raw.get("sender_eth_after",  "0"))
     gas_used = sim_raw.get("gas_used")
     gas_price = sim_raw.get("gas_price") or w3.eth.gas_price
 
-    decoded_events = decode_events(sim_raw.get("raw_logs", []), checksum_to)
+    decoded = decode_events(sim_raw.get("raw_logs", []),
+                            checksum_to, checksum_sender)
 
-    dev_spent = max(0, dev_before - dev_after)
+    # Detect native token drain into contract
+    contract_eth_before = int(sim_raw.get("contract_eth_before", "0"))
+    contract_eth_after = int(sim_raw.get("contract_eth_after",  "0"))
+    contract_eth_gained = max(0, contract_eth_after - contract_eth_before)
 
     return {
-        "success":         sim_raw["success"],
-        "reverted":        sim_raw["reverted"],
-        "revert_reason":   sim_raw.get("revert_reason"),
-        "gas_used":        gas_used,
-        "gas_cost":        format_amount(gas_used * gas_price) if gas_used and gas_price else None,
-        "events_emitted":  decoded_events,
+        "success":        sim_raw["success"],
+        "reverted":       sim_raw["reverted"],
+        "revert_reason":  sim_raw.get("revert_reason"),
+        "gas_used":       gas_used,
+        "gas_cost":       format_amount(gas_used * gas_price) if gas_used and gas_price else None,
+        "events_emitted": decoded["events"],
+        # ← specific danger signals
+        "warnings":       decoded["warnings"],
+        "value_flows":    decoded["value_flows"],     # ← who gained/lost what
+        "warning_count":  decoded["warning_count"],
         "state_diff": {
-            "sender_dev_before":     format_amount(dev_before),
-            "sender_dev_after":      format_amount(dev_after),
-            "sender_dev_spent":      format_amount(dev_spent),
+            "sender_native_before":  format_amount(native_before),
+            "sender_native_after":   format_amount(native_after),
+            "sender_native_spent":   format_amount(max(0, native_before - native_after)),
+            "contract_eth_before":   format_amount(contract_eth_before),
+            "contract_eth_after":    format_amount(contract_eth_after),
+            "contract_eth_gained":   format_amount(contract_eth_gained),
             "token_balance_before":  format_amount(real_token_balance, decimals),
+            "changed_storage_slots": sim_raw.get("changed_slots", {}),
         },
-        "simulation_note": sim_raw.get("simulation_note", "Hardhat fork simulation."),
+        "opcode_flags":   sim_raw.get("opcode_flags", []),
+        "simulation_note": sim_raw.get("simulation_note"),
     }
 
 
@@ -411,85 +517,192 @@ def _fallback_gas_estimate(
         }
 
 
-def decode_events(raw_logs: list, contract_address: str) -> list:
-    TRANSFER_TOPIC = w3.keccak(text="Transfer(address,address,uint256)").hex()
-    APPROVAL_TOPIC = w3.keccak(text="Approval(address,address,uint256)").hex()
-    APPROVAL_ALL_TOPIC = w3.keccak(
-        text="ApprovalForAll(address,address,bool)").hex()
-
-    UINT256_MAX = (2 ** 256) - 1
-
-    decoded = []
+def decode_events(raw_logs: list, contract_address: str, sender: str) -> dict:
     decimals = get_token_decimals(contract_address)
+    symbol = get_token_symbol(contract_address)
+    sender_lower = sender.lower()
+
+    events = []
+    warnings = []
+
+    # Track value flows: address -> {received, sent}
+    flows = {}
+
+    def add_flow(addr, direction, amount_raw):
+        addr = addr.lower()
+        if addr not in flows:
+            flows[addr] = {"received_raw": 0, "sent_raw": 0}
+        if direction == "in":
+            flows[addr]["received_raw"] += amount_raw
+        else:
+            flows[addr]["sent_raw"] += amount_raw
 
     for log in raw_logs:
         topics = log.get("topics", [])
         if not topics:
             continue
+
         topic0 = topics[0] if topics[0].startswith("0x") else "0x" + topics[0]
+        known = KNOWN_TOPICS.get(topic0)
 
         try:
-            if topic0 == TRANSFER_TOPIC:
-                # Need at least topic0 + 2 indexed args
+            if known and known["name"] == "Transfer":
                 from_addr = ("0x" + topics[1][-40:]
                              ) if len(topics) > 1 else "unknown"
                 to_addr = ("0x" + topics[2][-40:]
                            ) if len(topics) > 2 else "unknown"
                 amount_raw = int(log["data"], 16) if log.get(
                     "data", "0x") != "0x" else 0
-                decoded.append({
+
+                add_flow(from_addr, "out", amount_raw)
+                add_flow(to_addr,   "in",  amount_raw)
+
+                # Warn if sender is losing tokens they didn't intend to transfer
+                if from_addr.lower() == sender_lower:
+                    warnings.append({
+                        "type":    "token_leaving_sender",
+                        "detail":  f"Tokens moving OUT of your wallet to {to_addr}",
+                        "amount":  format_amount(amount_raw, decimals, symbol),
+                    })
+
+                events.append({
                     "event":  "Transfer",
                     "from":   from_addr,
                     "to":     to_addr,
-                    "amount": format_amount(amount_raw, decimals),
+                    "amount": format_amount(amount_raw, decimals, symbol),
                 })
 
-            elif topic0 == APPROVAL_TOPIC:
-                owner = ("0x" + topics[1][-40:]
-                         ) if len(topics) > 1 else "unknown"
-                spender = ("0x" + topics[2][-40:]
-                           ) if len(topics) > 2 else "unknown"
-                amount_raw = int(log["data"], 16) if log.get(
-                    "data", "0x") != "0x" else 0
+            elif known and known["name"] == "Approval":
+                # Standard: owner in topics[1], spender in topics[2], amount in data
+                # Non-standard: all args packed into data (1 topic only)
+                if len(topics) >= 3:
+                    owner = "0x" + topics[1][-40:]
+                    spender = "0x" + topics[2][-40:]
+                    amount_raw = int(log["data"], 16) if log.get(
+                        "data", "0x") != "0x" else 0
+                else:
+                    # Decode from data: owner (32 bytes) + spender (32 bytes) + amount (32 bytes)
+                    raw = log.get("data", "0x")[2:]  # strip 0x
+                    if len(raw) >= 192:
+                        owner = "0x" + raw[24:64]
+                        spender = "0x" + raw[88:128]
+                        amount_raw = int(raw[128:192], 16)
+                    else:
+                        # Only amount in data, owner/spender unknown
+                        owner = "unknown"
+                        spender = "unknown"
+                        amount_raw = int(log["data"], 16) if log.get(
+                            "data", "0x") != "0x" else 0
 
-                # Flag unlimited approvals explicitly
-                is_unlimited = (amount_raw >= UINT256_MAX)
-
-                decoded.append({
+                is_unlimited = amount_raw >= UINT256_MAX
+                if is_unlimited:
+                    warnings.append({
+                        "type":    "unlimited_approval",
+                        "detail":  f"Spender {spender} approved for UNLIMITED tokens — can drain everything",
+                        "spender": spender,
+                    })
+                events.append({
                     "event":        "Approval",
                     "owner":        owner,
                     "spender":      spender,
-                    "amount":       format_amount(amount_raw, decimals),
+                    "amount":       format_amount(amount_raw, decimals, symbol),
                     "is_unlimited": is_unlimited,
-                    "warning":      "UNLIMITED APPROVAL — spender can drain all tokens" if is_unlimited else None,
                 })
 
-            elif topic0 == APPROVAL_ALL_TOPIC:
+            elif known and known["name"] == "ApprovalForAll":
                 owner = ("0x" + topics[1][-40:]
                          ) if len(topics) > 1 else "unknown"
                 operator = ("0x" + topics[2][-40:]
                             ) if len(topics) > 2 else "unknown"
                 approved = bool(int(log["data"], 16)) if log.get(
                     "data", "0x") != "0x" else False
-                decoded.append({
+
+                if approved:
+                    warnings.append({
+                        "type":     "approve_all_nft",
+                        "detail":   f"Operator {operator} approved for ALL NFTs in collection",
+                        "operator": operator,
+                    })
+
+                events.append({
                     "event":    "ApprovalForAll",
                     "owner":    owner,
                     "operator": operator,
                     "approved": approved,
-                    "warning":  "FULL NFT COLLECTION APPROVAL — operator can transfer all NFTs" if approved else None,
+                })
+
+            elif known and known["name"] == "OwnershipTransferred":
+                prev_owner = ("0x" + topics[1][-40:]
+                              ) if len(topics) > 1 else "unknown"
+                new_owner = ("0x" + topics[2][-40:]
+                             ) if len(topics) > 2 else "unknown"
+                warnings.append({
+                    "type":      "ownership_transferred",
+                    "detail":    f"Contract ownership transferred from {prev_owner} to {new_owner}",
+                    "new_owner": new_owner,
+                })
+                events.append({"event": "OwnershipTransferred",
+                              "from": prev_owner, "to": new_owner})
+
+            elif known and known["name"] == "Upgraded":
+                new_impl = ("0x" + topics[1][-40:]
+                            ) if len(topics) > 1 else "unknown"
+                warnings.append({
+                    "type":   "contract_upgraded",
+                    "detail": f"Proxy contract logic upgraded to new implementation: {new_impl}",
+                })
+                events.append(
+                    {"event": "Upgraded", "new_implementation": new_impl})
+
+            elif known and known["name"] in ("Deposit", "Withdrawal"):
+                addr = ("0x" + topics[1][-40:]
+                        ) if len(topics) > 1 else "unknown"
+                amount_raw = int(log["data"], 16) if log.get(
+                    "data", "0x") != "0x" else 0
+                events.append({
+                    "event":  known["name"],
+                    "who":    addr,
+                    "amount": format_amount(amount_raw, decimals, symbol),
+                })
+
+            elif known:
+                # Known event type but no special handling — still record it
+                events.append({
+                    "event":  known["name"],
+                    "type":   known["type"],
+                    "topics": topics,
+                    "data":   log.get("data", "0x"),
                 })
 
             else:
-                decoded.append({
+                # Completely unknown — still useful for AI layer
+                events.append({
                     "event":    "unknown",
                     "topic":    topic0,
                     "raw_data": log.get("data", "0x"),
+                    "emitter":  log.get("address", "unknown"),
                 })
 
         except Exception:
-            decoded.append({"event": "decode_error", "raw": log})
+            events.append({"event": "decode_error", "raw": log})
 
-    return decoded
+    # Build human-readable flow summary
+    flow_summary = []
+    for addr, flow in flows.items():
+        if flow["sent_raw"] > 0 or flow["received_raw"] > 0:
+            flow_summary.append({
+                "address":  addr,
+                "sent":     format_amount(flow["sent_raw"],     decimals, symbol),
+                "received": format_amount(flow["received_raw"], decimals, symbol),
+                "is_sender": addr == sender_lower,
+            })
+
+    return {
+        "events":       events,
+        "warnings":     warnings,
+        "value_flows":  flow_summary,
+        "warning_count": len(warnings),
+    }
 
 #  layer 3 event scan
 
@@ -576,7 +789,183 @@ def get_bytecode_notes(address: str) -> dict:
         return {"error": f"Bytecode check failed: {str(exc)}"}
 
 
+def enrich_intent_from_events(intent: dict, events: list) -> dict:
+    UINT256_MAX = (2 ** 256) - 1
+
+    for event in events:
+        if event.get("event") == "Approval":
+            amount_raw = event.get("amount", {}).get("raw", 0)
+            spender = event.get("spender", "unknown")
+            is_unlimited = event.get(
+                "is_unlimited") or amount_raw >= UINT256_MAX
+
+            if is_unlimited:
+                intent["intent_summary"] = (
+                    f"⚠️ UNLIMITED APPROVAL detected via simulation. "
+                    f"Spender {spender} will be able to drain ALL tokens from this contract. "
+                    f"Original function selector 0x{intent.get('selector','?')} is non-standard."
+                )
+                intent["risk_hint"] = "unlimited_approval"
+            else:
+                intent["intent_summary"] = (
+                    f"Approval detected via simulation. "
+                    f"Grants {event.get('amount', {}).get('formatted', '?')} to {spender}."
+                )
+            break
+
+        if event.get("event") == "ApprovalForAll" and event.get("approved"):
+            intent["intent_summary"] = (
+                f"⚠️ APPROVE ALL detected. "
+                f"Operator {event.get('operator', 'unknown')} gains control over entire NFT collection."
+            )
+            intent["risk_hint"] = "approve_all"
+            break
+
+    return intent
+
+
+def analyze_simulation(simulation: dict, sender: str, target: str, value: int) -> dict:
+    # event-based warnings already decoded
+    warnings = list(simulation.get("warnings", []))
+    new_warns = []
+    summary = []
+
+    state = simulation.get("state_diff", {})
+    opcodes = simulation.get("opcode_flags", [])
+    slots = state.get("changed_storage_slots", {})
+    events = simulation.get("events_emitted", [])
+
+    if simulation.get("reverted"):
+        new_warns.append({
+            "type":   "reverted",
+            "detail": f"Transaction will revert: {simulation.get('revert_reason', 'no reason given')}",
+        })
+        summary.append("Transaction will revert on-chain.")
+
+    if "DELEGATECALL" in opcodes:
+        new_warns.append({
+            "type":   "delegatecall_executed",
+            "detail": "Contract executed DELEGATECALL — it ran external code inside its own "
+                      "storage context. If that external contract is malicious or upgradeable, "
+                      "it can modify any state.",
+        })
+        summary.append("Contract used DELEGATECALL during execution.")
+
+    if "SELFDESTRUCT" in opcodes:
+        new_warns.append({
+            "type":   "selfdestruct_executed",
+            "detail": "SELFDESTRUCT opcode executed — contract destroyed itself and swept its ETH balance.",
+        })
+        summary.append("Contract self-destructed during simulation.")
+
+    if "CREATE" in opcodes or "CREATE2" in opcodes:
+        new_warns.append({
+            "type":   "deploys_contract",
+            "detail": "Transaction deploys a new child contract during execution.",
+        })
+        summary.append("Contract deployed a child contract.")
+
+    if "CALLCODE" in opcodes:
+        new_warns.append({
+            "type":   "callcode_executed",
+            "detail": "CALLCODE detected — deprecated opcode similar to DELEGATECALL, high risk.",
+        })
+        summary.append("Contract used deprecated CALLCODE opcode.")
+
+    if slots:
+        for slot_idx, change in slots.items():
+            before = int(change["before"], 16)
+            after = int(change["after"],  16)
+
+            if before != 0 and after == 0:
+                new_warns.append({
+                    "type":   "storage_wiped",
+                    "slot":   slot_idx,
+                    "detail": f"Storage slot {slot_idx} was wiped (set to zero) — a balance or state was erased.",
+                })
+                summary.append(f"Storage slot {slot_idx} wiped to zero.")
+
+            elif before == 0 and after != 0:
+                summary.append(
+                    f"Storage slot {slot_idx} written: {after} (0x{after:x})")
+
+            else:
+                new_warns.append({
+                    "type":   "storage_modified",
+                    "slot":   slot_idx,
+                    "detail": f"Storage slot {slot_idx} changed from {before} to {after}.",
+                })
+                summary.append(
+                    f"Storage slot {slot_idx} modified: {before} → {after}.")
+
+    try:
+        target_code = w3.eth.get_code(Web3.to_checksum_address(target))
+        is_wallet = len(target_code) <= 2
+    except Exception:
+        is_wallet = False
+
+    if is_wallet and value > 0 and simulation.get("success"):
+        summary.append(
+            f"Plain {CHAIN_CURRENCY} transfer — "
+            f"sending {format_amount(value)['formatted']} directly to a wallet address. "
+            f"No contract involved."
+        )
+
+    contract_gained = state.get("contract_eth_gained", {}).get("raw", 0)
+    sender_spent = state.get("sender_native_spent", {}).get("raw", 0)
+    gas_cost = simulation.get("gas_cost") or {}
+    gas_raw = gas_cost.get("raw", 0)
+    net_loss = sender_spent - gas_raw
+
+    if net_loss > 0 and not is_wallet:
+        if contract_gained > 0:
+            new_warns.append({
+                "type":   "eth_sent_to_contract",
+                "detail": f"{format_amount(net_loss)['formatted']} sent to contract and retained — not forwarded to any recipient.",
+                "amount": format_amount(net_loss),
+            })
+            summary.append(
+                f"Contract retained {format_amount(net_loss)['formatted']} of {CHAIN_CURRENCY}.")
+        else:
+            new_warns.append({
+                "type":   "native_value_sent",
+                "detail": f"{format_amount(net_loss)['formatted']} of {CHAIN_CURRENCY} sent — contract forwarded it to a recipient.",
+                "amount": format_amount(net_loss),
+            })
+            summary.append(
+                f"Sender paid {format_amount(net_loss)['formatted']} in {CHAIN_CURRENCY} (forwarded by contract to recipient).")
+
+    for flow in simulation.get("value_flows", []):
+        if flow.get("is_sender") and flow["sent"]["raw"] > 0:
+            summary.append(
+                f"Your wallet sent {flow['sent']['formatted']} in tokens.")
+        elif not flow.get("is_sender") and flow["received"]["raw"] > 0:
+            summary.append(
+                f"{flow['address'][:10]}... received {flow['received']['formatted']}.")
+
+    if not events and not slots and not opcodes and simulation.get("success") and not is_wallet:
+        summary.append(
+            "No state changes detected — transaction has no observable on-chain effect.")
+
+    all_warnings = warnings + new_warns
+    high_risk_types = {
+        "unlimited_approval", "approve_all_nft", "selfdestruct_executed",
+        "storage_wiped", "eth_sent_to_contract", "delegatecall_executed",
+        "callcode_executed", "token_leaving_sender",
+    }
+    is_high_risk = any(w["type"] in high_risk_types for w in all_warnings)
+
+    return {
+        "warnings":      all_warnings,
+        "warning_count": len(all_warnings),
+        "summary":       summary,
+        "high_risk":     is_high_risk,
+        "opcode_flags":  opcodes,
+    }
+
+
 # trust registry heree
+
 
 def check_trust_registry(address: str) -> dict:
     STATUS_LABELS = {0: "Unknown", 1: "Safe", 2: "Malicious"}
@@ -636,19 +1025,15 @@ async def analyze_intent(tx_payload: TransactionRequest):
     data = tx_payload.data
     value = tx_payload.value
 
-    intent = decode_calldata(data, target)
-
     simulation = simulate_with_hardhat(sender, target, data, value)
+
+    analysis = analyze_simulation(simulation, sender, target, value)
 
     history = scan_event_history(target)
 
-    bytecode_notes = get_bytecode_notes(target)
-
     registry = check_trust_registry(target)
-
     identity = get_polkadot_identity(target)
 
-    # Sender preflight
     preflight = {}
     try:
         sender_balance = w3.eth.get_balance(Web3.to_checksum_address(sender))
@@ -665,11 +1050,10 @@ async def analyze_intent(tx_payload: TransactionRequest):
     return {
         "target_address": target,
         "sender_address": sender,
-        "intent":         intent,
         "preflight":      preflight,
         "simulation":     simulation,
+        "analysis":       analysis,
         "history":        history,
-        "bytecode_notes": bytecode_notes,
         "trust": {
             "registry":          registry,
             "polkadot_identity": identity,
