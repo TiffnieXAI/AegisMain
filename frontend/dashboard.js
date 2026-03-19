@@ -32,35 +32,68 @@ function connectWallet(walletName) {
 }
 
 document.getElementById('simulate-btn').onclick = function() {
-    const riskScore = 101; // Change this value to test different ranges
+    // Sample transaction data (similar to history.js format)
+    const sampleTransaction = {
+        id: "0x7a3f8b2e9d4c5e6f7a8b9c0d1e2f3a4b5c6d7e8f",
+        title: "Swap 1,500 USDC to AEG on Uniswap V3",
+        contract: "0xUniswapV3Router02",
+        contractShort: "0xUni...uter02",
+        riskScore: 78,
+        riskLevel: "high",
+        timestamp: new Date().toISOString(),
+        gasUsed: "189,450",
+        gasCost: "0.0032",
+        from: "0x1a2b3c4d5e6f7g8h9i0j",
+        warnings: [
+            "High slippage tolerance detected (3%)",
+            "First interaction with this pool",
+            "Contract has only 2 months of activity"
+        ],
+        analysis: {
+            summary: "This swap involves a newly created liquidity pool with relatively low liquidity. The slippage setting is higher than recommended, which could lead to unfavorable execution.",
+            vulnerabilities: ["Low liquidity pool", "High slippage", "New contract"],
+            verification: "Partial",
+            simulation: "Success with warnings",
+            codeHash: "0x8a7df3b2c4e5...",
+            callData: "0x095ea7b3...",
+            contractType: "Uniswap V3 Router"
+        }
+    };
 
-    // 1. Determine Rating and Color based on ranges
+    // Format date and time
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+    });
+    const formattedTime = now.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+
+    // Determine rating and color based on risk score
     let rating, ratingColor;
-    if (riskScore <= 0) {
-        rating = "INVALID";
-        ratingColor = "#f97316";
-    } else if (riskScore <= 20) {
+    if (sampleTransaction.riskScore <= 20) {
         rating = "SAFE";
         ratingColor = "#008a3e";
-    } else if (riskScore <= 40) {
+    } else if (sampleTransaction.riskScore <= 40) {
         rating = "LOW";
-        ratingColor = "#8bc34a";
-    } else if (riskScore <= 60) {
+        ratingColor = "#4da3ff";
+    } else if (sampleTransaction.riskScore <= 60) {
         rating = "MEDIUM";
-        ratingColor = "#ffeb3b";
-    } else if (riskScore <= 80) {
+        ratingColor = "#ffb347";
+    } else if (sampleTransaction.riskScore <= 80) {
         rating = "HIGH";
         ratingColor = "#f97316";
-    } else if (riskScore <= 100) {
-        rating = "CRITICAL";
-        ratingColor = "#f97316";
     } else {
-        rating = "INVALID";
+        rating = "CRITICAL";
         ratingColor = "#d32f2f";
     }
 
-    const isRiskWarningRequired = riskScore > 60;
+    const isRiskWarningRequired = sampleTransaction.riskScore > 60;
 
+    // Create overlay
     const overlay = document.createElement('div');
     overlay.style.cssText = `
         position: fixed; inset: 0; background: rgba(10, 15, 30, 0.7); 
@@ -69,46 +102,129 @@ document.getElementById('simulate-btn').onclick = function() {
     `;
 
     overlay.innerHTML = `
-        <div style="background: #1e293b; width: 440px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
-            <div style="padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; border-bottom: 1px solid #334155;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="background: #6200ea; color: white; padding: 8px; border-radius: 10px;">🛡️</div>
+        <div style="background: #1e293b; width: 480px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(139, 92, 246, 0.3); display: flex; flex-direction: column; max-height: 85vh;">
+            <!-- Header (fixed) -->
+            <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; background: #0f172a; border-bottom: 1px solid #334155; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: linear-gradient(135deg, #4f46e5, #8b5cf6); color: white; padding: 6px; border-radius: 8px; font-size: 14px;">🛡️</div>
                     <div>
-                        <div style="font-weight: 800; color: #ffffff; font-size: 15px;">A.E.G.I.S. Security</div>
-                        <div style="font-size: 11px; color: #94a3b8;">Transaction Approval</div>
+                        <div style="font-weight: 800; color: #ffffff; font-size: 14px;">A.E.G.I.S. Security</div>
+                        <div style="font-size: 10px; color: #94a3b8;">Transaction Simulation</div>
                     </div>
                 </div>
-                <div style="background: #1e293b; color: #f57c00; font-size: 11px; padding: 4px 12px; border-radius: 20px; border: 1px solid #ffe0b2; font-weight: 600;">🕒 Pending</div>
+                <div style="background: #1e293b; color: #f57c00; font-size: 10px; padding: 3px 10px; border-radius: 20px; border: 1px solid #f97316; font-weight: 600;">
+                    ⚡ Live
+                </div>
             </div>
 
-            <div style="padding: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <!-- Scrollable Content Area -->
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                <!-- Transaction Title -->
+                <div style="margin-bottom: 16px;">
+                    <small style="color: #94a3b8; font-size: 10px; font-weight: 600;">TRANSACTION</small>
+                    <h3 style="margin: 4px 0 0 0; color: #ffffff; font-size: 16px; font-weight: 600; line-height: 1.4;">${sampleTransaction.title}</h3>
+                </div>
+
+                <!-- Contract Address -->
+                <div style="background: #0f172a; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; border: 1px solid #334155;">
+                    <i class="ri-file-code-line" style="color: #8b5cf6; font-size: 16px;"></i>
+                    <span style="color: #94a3b8; font-size: 12px;">Contract:</span>
+                    <code style="color: #8b5cf6; font-size: 12px; font-family: monospace; background: rgba(139, 92, 246, 0.1); padding: 3px 6px; border-radius: 4px;">${sampleTransaction.contractShort}</code>
+                    <button class="copy-contract-btn" style="margin-left: auto; background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px;">
+                        <i class="ri-file-copy-line"></i>
+                    </button>
+                </div>
+
+                <!-- Risk Score and Level - More Compact -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #0f172a; padding: 12px; border-radius: 10px;">
                     <div>
-                        <small style="color: #94a3b8; font-size: 11px; font-weight: 600;">Danger Rating</small><br>
-                        <span style="background: ${ratingColor}; color: ${riskScore > 40 && riskScore <= 60 ? '#1e293b' : 'white'}; padding: 5px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; display: inline-block; margin-top: 4px;">${rating}</span>
+                        <small style="color: #94a3b8; font-size: 10px; font-weight: 600;">RISK LEVEL</small><br>
+                        <span style="background: ${ratingColor}; color: ${rating === 'MEDIUM' ? '#1e293b' : 'white'}; padding: 4px 10px; border-radius: 5px; font-weight: 700; font-size: 11px; display: inline-block; margin-top: 3px; text-transform: uppercase;">${rating}</span>
                     </div>
                     <div style="text-align: right;">
-                        <small style="color: #94a3b8; font-size: 11px; font-weight: 600;">Risk Score</small><br>
-                        <span style="font-size: 32px; font-weight: 800; color: ${ratingColor};">${riskScore}<small style="font-size: 14px; color: #64748b;">/100</small></span>
+                        <small style="color: #94a3b8; font-size: 10px; font-weight: 600;">RISK SCORE</small><br>
+                        <span style="font-size: 28px; font-weight: 800; color: ${ratingColor};">${sampleTransaction.riskScore}<small style="font-size: 12px; color: #64748b;">/100</small></span>
                     </div>
                 </div>
 
+                <!-- Date and Time - Compact Row -->
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; padding: 4px 0;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <i class="ri-calendar-line" style="color: #64748b; font-size: 14px;"></i>
+                        <span style="color: #cbd5e1; font-size: 12px;">${formattedDate}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <i class="ri-time-line" style="color: #64748b; font-size: 14px;"></i>
+                        <span style="color: #cbd5e1; font-size: 12px;">${formattedTime}</span>
+                    </div>
+                </div>
+
+                <!-- Gas Information - More Compact -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                    <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
+                        <small style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Gas Used</small>
+                        <div style="display: flex; align-items: baseline; gap: 3px; margin-top: 3px;">
+                            <span style="color: #ffffff; font-size: 16px; font-weight: 600;">${sampleTransaction.gasUsed}</span>
+                            <span style="color: #64748b; font-size: 9px;">units</span>
+                        </div>
+                    </div>
+                    <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
+                        <small style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Gas Cost</small>
+                        <div style="display: flex; align-items: baseline; gap: 3px; margin-top: 3px;">
+                            <span style="color: #ffffff; font-size: 16px; font-weight: 600;">${sampleTransaction.gasCost}</span>
+                            <span style="color: #64748b; font-size: 9px;">ETH</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Analysis Summary - More Compact -->
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                        <i class="ri-shield-check-line" style="color: #8b5cf6; font-size: 14px;"></i>
+                        <h4 style="color: #ffffff; font-size: 13px; margin: 0;">Security Analysis</h4>
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 12px; line-height: 1.5; margin: 0; background: #0f172a; padding: 10px; border-radius: 8px;">
+                        ${sampleTransaction.analysis.summary}
+                    </p>
+                </div>
+
+                <!-- Warnings - More Compact -->
+                ${sampleTransaction.warnings.length > 0 ? `
+                <div style="background: rgba(249, 115, 22, 0.1); border-left: 3px solid #f97316; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                        <i class="ri-alert-line" style="color: #f97316; font-size: 14px;"></i>
+                        <h4 style="color: #f97316; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Warnings</h4>
+                    </div>
+                    <ul style="margin: 0; padding-left: 18px; color: #ffb347; font-size: 11px; line-height: 1.6;">
+                        ${sampleTransaction.warnings.map(warning => `<li>${warning}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
                 ${isRiskWarningRequired ? `
-                <div id="risk-acknowledgment" style="background: #fff7ed; border: 1.5px solid #f97316; padding: 16px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 12px; align-items: flex-start;">
-                    <input type="checkbox" id="risk-checkbox" style="width: 18px; height: 18px; cursor: pointer; margin-top: 3px;">
-                    <label for="risk-checkbox" style="font-size: 13px; color: #9a3412; line-height: 1.5; cursor: pointer;">
-                        <strong>I understand the risks</strong><br>
-                        I acknowledge that this transaction has been flagged as ${rating} risk. I accept full responsibility for proceeding.
+                <div id="risk-acknowledgment" style="background: #0f172a; border: 1.5px solid #f97316; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start;">
+                    <input type="checkbox" id="risk-checkbox" style="width: 16px; height: 16px; cursor: pointer; margin-top: 2px; accent-color: #f97316;">
+                    <label for="risk-checkbox" style="font-size: 12px; color: #ffb347; line-height: 1.4; cursor: pointer;">
+                        <strong style="color: #f97316; display: block; margin-bottom: 2px;">I acknowledge the risks</strong>
+                        This transaction has been flagged as ${rating} risk
                     </label>
                 </div>
-                ` : '<p style="color: #cbd5e1; font-size: 13px;">This transaction appears standard and has passed initial security checks.</p>'}
+                ` : ''}
+
+                <!-- View Full Analysis Button - More Compact -->
+                <div style="margin-bottom: 10px;">
+                    <button id="view-full-analysis" style="width: 100%; padding: 8px; background: transparent; border: 1px solid #8b5cf6; color: #8b5cf6; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="ri-code-line"></i> View Full Technical Analysis
+                    </button>
+                </div>
             </div>
 
-            <div style="padding: 20px 24px; display: flex; gap: 12px; background: #0f172a; border-top: 1px solid #334155;">
-                <button id="btn-reject" style="flex: 1; padding: 14px; background: #d32f2f; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700;">
+            <!-- Footer with Action Buttons (fixed) -->
+            <div style="padding: 16px 20px; display: flex; gap: 10px; background: #0f172a; border-top: 1px solid #334155; flex-shrink: 0;">
+                <button id="btn-reject" style="flex: 1; padding: 12px; background: #d32f2f; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px;">
                     Reject
                 </button>
-                <button id="btn-accept" ${isRiskWarningRequired ? 'disabled' : ''} style="flex: 1; padding: 14px; background: ${isRiskWarningRequired ? '#334155' : '#008a3e'}; color: white; border: none; border-radius: 12px; cursor: ${isRiskWarningRequired ? 'not-allowed' : 'pointer'}; font-weight: 600; transition: all 0.2s;">
+                <button id="btn-accept" ${isRiskWarningRequired ? 'disabled' : ''} style="flex: 1; padding: 12px; background: ${isRiskWarningRequired ? '#334155' : '#008a3e'}; color: white; border: none; border-radius: 10px; cursor: ${isRiskWarningRequired ? 'not-allowed' : 'pointer'}; font-weight: 600; font-size: 13px;">
                     Accept
                 </button>
             </div>
@@ -117,10 +233,12 @@ document.getElementById('simulate-btn').onclick = function() {
 
     document.body.appendChild(overlay);
 
+    // Event Listeners for checkbox and buttons
     const checkbox = document.getElementById('risk-checkbox');
     const acceptBtn = document.getElementById('btn-accept');
     const rejectBtn = document.getElementById('btn-reject');
 
+    // Checkbox handler (enables/disables accept button)
     if (checkbox) {
         checkbox.onchange = function() {
             if (this.checked) {
@@ -137,9 +255,140 @@ document.getElementById('simulate-btn').onclick = function() {
         };
     }
 
+    // Copy contract address handler
+    const copyBtn = overlay.querySelector('.copy-contract-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            navigator.clipboard.writeText(sampleTransaction.contract).then(() => {
+                const originalHtml = this.innerHTML;
+                this.innerHTML = '<i class="ri-check-line" style="color: #39d98a;"></i>';
+                setTimeout(() => {
+                    this.innerHTML = originalHtml;
+                }, 1500);
+            });
+        });
+    }
+
+    // View Full Analysis button handler
+    const viewAnalysisBtn = overlay.querySelector('#view-full-analysis');
+    if (viewAnalysisBtn) {
+        viewAnalysisBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            showTechnicalAnalysisModal(sampleTransaction, overlay);
+        });
+    }
+
+    // REJECT button handler (uses your existing showRejectionModal function)
     rejectBtn.onclick = () => showRejectionModal(overlay);
-    acceptBtn.onclick = () => { if (!acceptBtn.disabled) showApprovalModal(overlay, rating, ratingColor); };
+
+    // ACCEPT button handler (uses your existing showApprovalModal function)
+    acceptBtn.onclick = () => { 
+        if (!acceptBtn.disabled) {
+            showApprovalModal(overlay, rating, ratingColor);
+        }
+    };
 };
+
+// Technical Analysis Modal for simulation (add this AFTER the main function)
+function showTechnicalAnalysisModal(transaction, mainOverlay) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);`;
+
+    modal.innerHTML = `
+        <div style="background: #1e293b; width: 550px; max-width: 90vw; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(139, 92, 246, 0.3); display: flex; flex-direction: column; max-height: 80vh;">
+            <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; background: #0f172a; border-bottom: 1px solid #334155; flex-shrink: 0;">
+                <h3 style="color: white; margin: 0; font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-code-box-line" style="color: #8b5cf6;"></i>
+                    Technical Analysis
+                </h3>
+                <button class="close-tech-modal" style="background: transparent; border: none; color: #64748b; cursor: pointer; font-size: 20px;">&times;</button>
+            </div>
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                <pre style="background: #0f172a; padding: 14px; border-radius: 8px; color: #a5b4fc; font-family: monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin: 0;">${JSON.stringify(transaction.analysis, null, 2)}</pre>
+                
+                <div style="margin-top: 16px; background: #0f172a; padding: 14px; border-radius: 8px;">
+                    <h4 style="color: #ffffff; font-size: 12px; margin: 0 0 10px 0;">Transaction Details</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <span style="color: #64748b; font-size: 10px;">Transaction ID</span>
+                            <p style="color: #8b5cf6; font-size: 10px; margin: 3px 0 0 0; word-break: break-all;">${transaction.id.substring(0, 20)}...</p>
+                        </div>
+                        <div>
+                            <span style="color: #64748b; font-size: 10px;">Verification</span>
+                            <p style="color: ${transaction.analysis.verification === 'Passed' ? '#39d98a' : '#f97316'}; font-size: 11px; margin: 3px 0 0 0;">${transaction.analysis.verification}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 16px 20px; background: #0f172a; border-top: 1px solid #334155; text-align: right; flex-shrink: 0;">
+                <button class="close-tech-modal" style="background: #8b5cf6; color: white; border: none; padding: 7px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px;">Close</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close modal handlers
+    modal.querySelectorAll('.close-tech-modal').forEach(btn => {
+        btn.addEventListener('click', () => modal.remove());
+    });
+
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// Technical Analysis Modal for simulation (add this AFTER the main function)
+function showTechnicalAnalysisModal(transaction, mainOverlay) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);`;
+
+    modal.innerHTML = `
+        <div style="background: #1e293b; width: 600px; max-width: 90vw; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(139, 92, 246, 0.3);">
+            <div style="padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; background: #0f172a; border-bottom: 1px solid #334155;">
+                <h3 style="color: white; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-code-box-line" style="color: #8b5cf6;"></i>
+                    Technical Analysis
+                </h3>
+                <button class="close-tech-modal" style="background: transparent; border: none; color: #64748b; cursor: pointer; font-size: 20px;">&times;</button>
+            </div>
+            <div style="padding: 24px; max-height: 60vh; overflow-y: auto;">
+                <pre style="background: #0f172a; padding: 16px; border-radius: 8px; color: #a5b4fc; font-family: monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; margin: 0;">${JSON.stringify(transaction.analysis, null, 2)}</pre>
+                
+                <div style="margin-top: 20px; background: #0f172a; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #ffffff; font-size: 13px; margin: 0 0 12px 0;">Transaction Details</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <span style="color: #64748b; font-size: 11px;">Transaction ID</span>
+                            <p style="color: #8b5cf6; font-size: 11px; margin: 4px 0 0 0; word-break: break-all;">${transaction.id}</p>
+                        </div>
+                        <div>
+                            <span style="color: #64748b; font-size: 11px;">Contract Verification</span>
+                            <p style="color: ${transaction.analysis.verification === 'Passed' ? '#39d98a' : '#f97316'}; font-size: 11px; margin: 4px 0 0 0;">${transaction.analysis.verification}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 18px 24px; background: #0f172a; border-top: 1px solid #334155; text-align: right;">
+                <button class="close-tech-modal" style="background: #8b5cf6; color: white; border: none; padding: 8px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close modal handlers
+    modal.querySelectorAll('.close-tech-modal').forEach(btn => {
+        btn.addEventListener('click', () => modal.remove());
+    });
+
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
 
 // 2. Rejection Modal
 function showRejectionModal(mainOverlay) {
