@@ -1,137 +1,22 @@
-// Sample Transaction 
-const sampleTransactions = [
-    {
-        id: "0x7a3f...8d2e",
-        timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-        status: "approved",
-        riskLevel: "low",
-        riskScore: 24,
-        description: "Swap 150 USDC to AEG on Uniswap V3",
-        from: "0x1a2b...3c4d",
-        to: "0xUniswapV3Router02",
-        gasUsed: "145,320",
-        gasCost: "0.0023 ETH",
-        warnings: [],
-        recommendations: [
-            "Slippage tolerance set to 0.5% — acceptable.",
-            "Contract verified on Etherscan."
-        ],
-        technicalAnalysis: {
-            summary: "Low-risk DeFi swap. No unusual call data. Contract is verified and widely used.",
-            vulnerabilities: [],
-            verification: "Passed",
-            codeHash: "0x8a7d...f3b2",
-            simulation: "Success"
-        }
-    },
-    {
-        id: "0x9b4c...1f7a",
-        timestamp: new Date(Date.now() - 1000 * 60 * 32).toISOString(), // 32 minutes ago
-        status: "rejected",
-        riskLevel: "critical",
-        riskScore: 92,
-        description: "Mint 10,000 UNI to unverified minter contract",
-        from: "0x3b4c...5d6e",
-        to: "0xSuspiciousMinter",
-        gasUsed: "210,000",
-        gasCost: "0.0085 ETH",
-        warnings: [
-            "Contract not verified on Etherscan.",
-            "Unlimited token approval detected.",
-            "Recipient address has been flagged in 3 previous scams."
-        ],
-        recommendations: [
-            "DO NOT PROCEED. This is a known scam pattern.",
-            "Revoke any approvals immediately if already given."
-        ],
-        technicalAnalysis: {
-            summary: "Malicious minter contract attempts to drain tokens. High-risk call data pattern matches 'approveAndCall' exploit.",
-            vulnerabilities: ["Unverified contract", "Unlimited approval", "Honeypot pattern"],
-            verification: "Failed",
-            codeHash: "0xdead...beef",
-            simulation: "Reverted (malicious)"
-        }
-    },
-    {
-        id: "0x2c5d...9e8f",
-        timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-        status: "approved",
-        riskLevel: "medium",
-        riskScore: 58,
-        description: "Stake 500 AEG in AEGIS staking pool",
-        from: "0x5e6f...7g8h",
-        to: "0xAEGISStaking",
-        gasUsed: "98,450",
-        gasCost: "0.0011 ETH",
-        warnings: [
-            "First interaction with this staking contract.",
-            "Lockup period: 14 days."
-        ],
-        recommendations: [
-            "Contract has been audited by Trail of Bits.",
-            "Ensure you understand the unstaking period."
-        ],
-        technicalAnalysis: {
-            summary: "Staking interaction. Contract audited, but lockup period applies.",
-            vulnerabilities: ["Centralization risk (owner can pause)"],
-            verification: "Passed",
-            codeHash: "0xabcd...1234",
-            simulation: "Success"
-        }
-    },
-    {
-        id: "0x8f7e...6d5c",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-        status: "rejected",
-        riskLevel: "high",
-        riskScore: 81,
-        description: "Transfer 2.5 ETH to address with phishing history",
-        from: "0x9h8i...7j6k",
-        to: "0xPhishyAddress",
-        gasUsed: "21,000",
-        gasCost: "0.0006 ETH",
-        warnings: [
-            "Recipient address associated with known phishing site 'eth-airdrop[.]scam'.",
-            "Large amount to a new address."
-        ],
-        recommendations: [
-            "Verify recipient address via trusted channels.",
-            "Consider using a hardware wallet for large transfers."
-        ],
-        technicalAnalysis: {
-            summary: "High-risk transfer to a known malicious address.",
-            vulnerabilities: ["Address blacklisted", "No contract interaction"],
-            verification: "Failed",
-            codeHash: "N/A",
-            simulation: "Warning (blacklist)"
-        }
-    },
-    {
-        id: "0x3e4f...2a1b",
-        timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
-        status: "approved",
-        riskLevel: "safe",
-        riskScore: 5,
-        description: "Claim AEGIS staking rewards",
-        from: "0x1a2b...3c4d",
-        to: "0xAEGISStaking",
-        gasUsed: "65,000",
-        gasCost: "0.0009 ETH",
-        warnings: [],
-        recommendations: ["Rewards claimed successfully. No action needed."],
-        technicalAnalysis: {
-            summary: "Standard reward claim. No issues detected.",
-            vulnerabilities: [],
-            verification: "Passed",
-            codeHash: "0xabcd...1234",
-            simulation: "Success"
-        }
-    }
-];
-
 // Global variables for current filter state
 let currentStatusFilter = 'all';
 let currentRiskFilter = 'all';
+let transactions = [];
+
+// // Mappings for DB Integers to Frontend Strings
+const STATUS_MAP = {
+    0: "rejected",
+    1: "approved",
+};
+const RISK_MAP = {
+    0: "safe",
+    1: "low",
+    2: "medium",
+    3: "high",
+    4: "critical",
+    5: "unknown"
+};
+
 
 // DOM elements
 const transactionListEl = document.getElementById('transactionList');
@@ -152,6 +37,7 @@ const riskHighSpan = document.getElementById('riskHigh');
 const riskMediumSpan = document.getElementById('riskMedium');
 const riskLowSpan = document.getElementById('riskLow');
 const riskSafeSpan = document.getElementById('riskSafe');
+const riskUnknownSpan = document.getElementById('riskUnknown');
 
 // Modals
 const mainModal = document.getElementById('transactionModal');
@@ -192,19 +78,20 @@ function shortenAddress(address) {
 
 // ---------- Filter Update and Counts ----------
 function updateFilterCounts() {
-    const total = sampleTransactions.length;
-    const approved = sampleTransactions.filter(tx => tx.status === 'approved').length;
-    const rejected = sampleTransactions.filter(tx => tx.status === 'rejected').length;
+    const total = transactions.length;
+    const approved = transactions.filter(tx => tx.status === 1).length;
+    const rejected = transactions.filter(tx => tx.status === 2).length;
     
     statusAllSpan.textContent = total;
     statusApprovedSpan.textContent = approved;
     statusRejectedSpan.textContent = rejected;
     
-    const critical = sampleTransactions.filter(tx => tx.riskLevel === 'critical').length;
-    const high = sampleTransactions.filter(tx => tx.riskLevel === 'high').length;
-    const medium = sampleTransactions.filter(tx => tx.riskLevel === 'medium').length;
-    const low = sampleTransactions.filter(tx => tx.riskLevel === 'low').length;
-    const safe = sampleTransactions.filter(tx => tx.riskLevel === 'safe').length;
+    const critical = transactions.filter(tx => tx.risk_level === 4).length;
+    const high = transactions.filter(tx => tx.risk_level === 3).length;
+    const medium = transactions.filter(tx => tx.risk_level === 2).length;
+    const low = transactions.filter(tx => tx.risk_level === 1).length;
+    const safe = transactions.filter(tx => tx.risk_level === 0).length;
+    const unknown = transactions.filter(tx => tx.risk_level === 5).length;
     
     riskAllSpan.textContent = total;
     riskCriticalSpan.textContent = critical;
@@ -212,31 +99,82 @@ function updateFilterCounts() {
     riskMediumSpan.textContent = medium;
     riskLowSpan.textContent = low;
     riskSafeSpan.textContent = safe;
+    riskUnknownSpan.textContent = unknown;
 }
 
 // Apply filters and render
-function filterAndRenderTransactions() {
-    let filtered = sampleTransactions;
-    
-    // Filter by status
-    if (currentStatusFilter !== 'all') {
-        filtered = filtered.filter(tx => tx.status === currentStatusFilter);
-    }
-    
-    // Filter by risk
-    if (currentRiskFilter !== 'all') {
-        filtered = filtered.filter(tx => tx.riskLevel === currentRiskFilter);
-    }
-    
-    renderTransactionList(filtered);
-    
-    // Show/hide no transactions message
-    if (filtered.length === 0) {
+async function filterAndRenderTransactions() {
+
+    const walletAddress = localStorage.getItem('walletAddress');
+
+    const statusMapping = {
+        'all': -1,
+        'approved': 1,
+        'rejected': 0
+    };
+
+    const riskMapping = {
+        'all': -1,
+        'safe': 0,
+        'low': 1,
+        'medium': 2,
+        'high': 3,
+        'critical': 4,
+        'unknown': 5
+    };
+
+    const currentStatusFilter = statusMapping[currentStatusFilter] ?? -1;
+    const currentRiskFilter = riskMapping[currentRiskFilter] ?? -1;
+
+    if (!walletAddress) {
+        console.warn("No wallet address found. Please connect wallet.");
+        transactionListEl.innerHTML = '';
         noTransactionsMsg.style.display = 'block';
-    } else {
-        noTransactionsMsg.style.display = 'none';
+        return;
     }
-}
+
+    try {
+        const params = new URLSearchParams({
+            wallet_address: walletAddress,
+            status_filter: currentStatusFilter,
+            risk_filter: currentRiskFilter
+        });
+        const response = await fetch(`http://127.0.0.1:8000/transactions/filter?${params}`);
+        
+        if (!response.ok) {
+            throw new Error("Failed to fetch transactions: ");
+        }
+
+        const data = await response.json();
+        renderTransactionList(data);
+        updateFilterCounts(data);
+
+        noTransactionsMsg.style.display = data.total === 0 ? 'block' : 'none';
+
+    } catch (error) {
+        console.error('Error fetching transactions:', error);        
+    }}
+    // let filtered = sampleTransactions; //make function     await fetch('Enpoint')
+    // // Filter by status
+    // await fetch('URL/transactions/');
+    // if (currentStatusFilter !== 'all') {
+    //     filtered = filtered.filter(tx => tx.status === currentStatusFilter); //mga filter kahit wala na kasi pwede naifilter sa endpoint
+    // } 
+    
+    // // Filter by risk
+    // if (currentRiskFilter !== 'all') {
+    //     filtered = filtered.filter(tx => tx.riskLevel === currentRiskFilter);
+    // }
+    
+    // renderTransactionList(filtered);
+    
+    // //Show/hide no transactions message
+    // if (filtered.length === 0) {
+    //     noTransactionsMsg.style.display = 'block';
+    // } else {
+    //     noTransactionsMsg.style.display = 'none';
+    // }
+// }
 
 // ---------- Render Transaction List (stacked cards) ----------
 function renderTransactionList(transactions) {
@@ -250,26 +188,26 @@ function renderTransactionList(transactions) {
     let html = '';
     transactions.forEach(tx => {
         const timeAgo = formatTimeAgo(tx.timestamp);
-        const shortFrom = shortenAddress(tx.from);
-        const shortTo = shortenAddress(tx.to);
-        const riskClass = tx.riskLevel.toLowerCase();
-        const statusClass = tx.status.toLowerCase();
+        const shortFrom = shortenAddress(tx.wallet_address);
+        const shortTo = shortenAddress(tx.address_destination);
+        const riskClass = RISK_MAP[tx.risk_level];
+        const statusClass = STATUS_MAP[tx.status];
         
         html += `
-            <div class="transaction-item" data-tx-id="${tx.id}">
+            <div class="transaction-item" data-tx-id="${tx.transaction_hash}">
                 <div class="transaction-header">
                     <div class="transaction-title">
-                        <h3>${tx.description}</h3>
-                        <span class="risk-badge ${riskClass}">${tx.riskLevel.toUpperCase()}</span>
+                        <h3>${tx.method_called}</h3>
+                        <span class="risk-badge ${riskClass}">${tx.risk_level.toUpperCase()}</span>
                         <span class="status-badge ${statusClass}">${tx.status.toUpperCase()}</span>
                     </div>
-                    <span class="risk-score">Risk Score: ${tx.riskScore}</span>
-                </div>
+                        <span class="risk-score">Risk Level: ${tx.risk_level.toUpperCase()}</span>
+                    </div>
                 <div class="transaction-meta">
                     <span><i class="ri-user-line"></i> From: ${shortFrom}</span>
                     <span><i class="ri-arrow-right-line"></i> To: ${shortTo}</span>
                     <span><i class="ri-time-line"></i> ${timeAgo}</span>
-                    <button class="see-more-btn" data-tx-id="${tx.id}">See More <i class="ri-arrow-right-s-line"></i></button>
+                    <button class="see-more-btn" data-tx-id="${tx.transaction_hash}">See More <i class="ri-arrow-right-s-line"></i></button>
                 </div>
             </div>
         `;
@@ -289,12 +227,12 @@ function renderTransactionList(transactions) {
 
 // ---------- Modal Functions ----------
 function openTransactionModal(txId) {
-    const transaction = sampleTransactions.find(tx => tx.id === txId);
+    const transaction = sampleTransactions.find(tx => tx.transaction_hash === txId);
     if (!transaction) return;
     
     // Populate main modal - with null checks to prevent errors
     const modalTxId = document.getElementById('modalTxId');
-    if (modalTxId) modalTxId.textContent = transaction.id;
+    if (modalTxId) modalTxId.textContent = transaction.transaction_hash;
     
     const modalTxDate = document.getElementById('modalTxDate');
     if (modalTxDate) modalTxDate.textContent = formatFullDate(transaction.timestamp);
@@ -480,7 +418,9 @@ if (copyBtn) {
 
 // ---------- Initialization ----------
 document.addEventListener('DOMContentLoaded', () => {
-    updateFilterCounts();
+
+    console.log("Current status:", currentStatusFilter);
+    updateFilterCounts([]);
     filterAndRenderTransactions();
     
     // Ensure modals are hidden initially

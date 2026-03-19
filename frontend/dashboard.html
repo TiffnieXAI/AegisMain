@@ -73,7 +73,7 @@
             <div class="card-dash safe">
                 <h3>Approved</h3>
                 <h2 id="approved">0</h2>
-                <span>Safe transactions</span>
+                <span>accepted transactions</span>
             </div>
             <div class="card-dash pending">
                 <h3>Pending Review</h3>
@@ -93,27 +93,11 @@
                     <h3><i class="ri-error-warning-line"></i> Recent Security Alerts</h3>
                     <p>Latest threats detected by A.E.G.I.S.</p>
                 </div>
-                <div class="alert-list-dash">
+                <div class="alert-list-dash" id="recentAlerts">
                     <div class="alert-item critical">
                         <div class="alert-info">
-                            <strong>Unlimited approval request blocked</strong>
-                            <span>2 minutes ago</span>
+                            <strong>No recent alerts</strong>
                         </div>
-                        <span class="badge critical">CRITICAL</span>
-                    </div>
-                    <div class="alert-item warning">
-                        <div class="alert-info">
-                            <strong>Suspicious NFT mint detected</strong>
-                            <span>15 minutes ago</span>
-                        </div>
-                        <span class="badge warning">WARNING</span>
-                    </div>
-                    <div class="alert-item critical">
-                        <div class="alert-info">
-                            <strong>Honeypot contract identified</strong>
-                            <span>1 hour ago</span>
-                        </div>
-                        <span class="badge critical">CRITICAL</span>
                     </div>
                 </div>
             </div>
@@ -125,16 +109,16 @@
                 </div>
                 <div class="summary-list-dash">
                     <div class="summary-item">
-                        <span>Threats Blocked Today</span>
-                        <span class="val-threat">89</span>
+                        <span>Threats Blocked Last 7 Days</span>
+                        <span id="threatsBlockedL7D" class="val-threat">0</span>
                     </div>
                     <div class="summary-item">
-                        <span>Safe Transactions</span>
-                        <span class="val-safe">1134</span>
+                        <span>Approved Transactions Last 7 Days</span>
+                        <span id="approvedL7D" class="val-safe">0</span>
                     </div>
                     <div class="summary-item">
                         <span>Protection Rate</span>
-                        <span class="val-rate">98.5%</span>
+                        <span id="summaryrate" class="val-rate">0%</span>
                     </div>
                     <a href="historyPage.html" class="history-btn-dash">View Full Transaction History</a>
                 </div>
