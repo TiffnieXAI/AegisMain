@@ -32,31 +32,28 @@ function connectWallet(walletName) {
 }
 
 document.getElementById('simulate-btn').onclick = function() {
-    // Sample transaction data (similar to history.js format)
+    // Sample transaction data (matching the standalone version)
     const sampleTransaction = {
         id: "0x7a3f8b2e9d4c5e6f7a8b9c0d1e2f3a4b5c6d7e8f",
         title: "Swap 1,500 USDC to AEG on Uniswap V3",
         contract: "0xUniswapV3Router02",
         contractShort: "0xUni...uter02",
+        from: "0x1a2b3c4d5e6f7g8h9i0j",
+        fromShort: "0x1a2b...9i0j",
         riskScore: 78,
         riskLevel: "high",
         timestamp: new Date().toISOString(),
         gasUsed: "189,450",
         gasCost: "0.0032",
-        from: "0x1a2b3c4d5e6f7g8h9i0j",
+        trustScore: 82,
+        scamSimilarity: 12,
         warnings: [
             "High slippage tolerance detected (3%)",
             "First interaction with this pool",
             "Contract has only 2 months of activity"
         ],
         analysis: {
-            summary: "This swap involves a newly created liquidity pool with relatively low liquidity. The slippage setting is higher than recommended, which could lead to unfavorable execution.",
-            vulnerabilities: ["Low liquidity pool", "High slippage", "New contract"],
-            verification: "Partial",
-            simulation: "Success with warnings",
-            codeHash: "0x8a7df3b2c4e5...",
-            callData: "0x095ea7b3...",
-            contractType: "Uniswap V3 Router"
+            summary: "This swap involves a newly created liquidity pool with relatively low liquidity. The slippage setting is higher than recommended, which could lead to unfavorable execution."
         }
     };
 
@@ -91,6 +88,23 @@ document.getElementById('simulate-btn').onclick = function() {
         ratingColor = "#d32f2f";
     }
 
+    // Get trust badge
+    const getTrustBadge = (score) => {
+        if (score >= 80) return { text: 'High Trust', color: '#39d98a', bg: 'rgba(57, 217, 138, 0.1)' };
+        if (score >= 60) return { text: 'Medium', color: '#ffb347', bg: 'rgba(255, 179, 71, 0.1)' };
+        if (score >= 40) return { text: 'Low Trust', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)' };
+        return { text: 'Untrusted', color: '#d32f2f', bg: 'rgba(211, 47, 47, 0.1)' };
+    };
+
+    const getSimilarityBadge = (score) => {
+        if (score <= 20) return { text: 'Low Risk', color: '#4da3ff', bg: 'rgba(77, 163, 255, 0.1)' };
+        if (score <= 50) return { text: 'Medium Risk', color: '#ffb347', bg: 'rgba(255, 179, 71, 0.1)' };
+        if (score <= 80) return { text: 'High Risk', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)' };
+        return { text: 'Critical', color: '#d32f2f', bg: 'rgba(211, 47, 47, 0.1)' };
+    };
+
+    const trustBadge = getTrustBadge(sampleTransaction.trustScore);
+    const similarityBadge = getSimilarityBadge(sampleTransaction.scamSimilarity);
     const isRiskWarningRequired = sampleTransaction.riskScore > 60;
 
     // Create overlay
@@ -102,53 +116,62 @@ document.getElementById('simulate-btn').onclick = function() {
     `;
 
     overlay.innerHTML = `
-        <div style="background: #1e293b; width: 480px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(139, 92, 246, 0.3); display: flex; flex-direction: column; max-height: 85vh;">
-            <!-- Header (fixed) -->
-            <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; background: #0f172a; border-bottom: 1px solid #334155; flex-shrink: 0;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="background: linear-gradient(135deg, #4f46e5, #8b5cf6); color: white; padding: 6px; border-radius: 8px; font-size: 14px;">🛡️</div>
-                    <div>
-                        <div style="font-weight: 800; color: #ffffff; font-size: 14px;">A.E.G.I.S. Security</div>
-                        <div style="font-size: 10px; color: #94a3b8;">Transaction Simulation</div>
-                    </div>
-                </div>
-                <div style="background: #1e293b; color: #f57c00; font-size: 10px; padding: 3px 10px; border-radius: 20px; border: 1px solid #f97316; font-weight: 600;">
-                    ⚡ Live
-                </div>
+        <div style="background: #1e293b; width: 480px; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(139, 92, 246, 0.3); display: flex; flex-direction: column; max-height: 85vh; animation: fadeInScale 0.3s ease-out;">
+            <style>
+                @keyframes fadeInScale {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+            </style>
+            
+            <!-- Header (without logo) -->
+            <div style="padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; background: #0f172a; border-bottom: 1px solid #334155; flex-shrink: 0;">
+                <div style="font-weight: 800; color: #ffffff; font-size: 16px;">Transaction Simulation</div>
+                <button class="close-dash-sim" style="background: transparent; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 0 4px;">&times;</button>
             </div>
 
-            <!-- Scrollable Content Area -->
+            <!-- Scrollable Content -->
             <div style="padding: 20px; overflow-y: auto; flex: 1;">
                 <!-- Transaction Title -->
                 <div style="margin-bottom: 16px;">
-                    <small style="color: #94a3b8; font-size: 10px; font-weight: 600;">TRANSACTION</small>
-                    <h3 style="margin: 4px 0 0 0; color: #ffffff; font-size: 16px; font-weight: 600; line-height: 1.4;">${sampleTransaction.title}</h3>
+                    <span style="color: #94a3b8; font-size: 10px; font-weight: 600; text-transform: uppercase;">TRANSACTION</span>
+                    <h3 style="margin: 4px 0 0 0; color: #ffffff; font-size: 18px; font-weight: 600; line-height: 1.4;">${sampleTransaction.title}</h3>
                 </div>
 
                 <!-- Contract Address -->
-                <div style="background: #0f172a; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; border: 1px solid #334155;">
+                <div style="background: #0f172a; padding: 12px 14px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border: 1px solid #334155;">
                     <i class="ri-file-code-line" style="color: #8b5cf6; font-size: 16px;"></i>
                     <span style="color: #94a3b8; font-size: 12px;">Contract:</span>
                     <code style="color: #8b5cf6; font-size: 12px; font-family: monospace; background: rgba(139, 92, 246, 0.1); padding: 3px 6px; border-radius: 4px;">${sampleTransaction.contractShort}</code>
-                    <button class="copy-contract-btn" style="margin-left: auto; background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px;">
+                    <button class="copy-contract-dash" style="margin-left: auto; background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px;">
                         <i class="ri-file-copy-line"></i>
                     </button>
                 </div>
 
-                <!-- Risk Score and Level - More Compact -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #0f172a; padding: 12px; border-radius: 10px;">
+                <!-- From Address -->
+                <div style="background: #0f172a; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border: 1px solid #334155;">
+                    <i class="ri-user-line" style="color: #4da3ff; font-size: 16px;"></i>
+                    <span style="color: #94a3b8; font-size: 12px;">From:</span>
+                    <code style="color: #4da3ff; font-size: 12px; font-family: monospace; background: rgba(77, 163, 255, 0.1); padding: 3px 6px; border-radius: 4px;">${sampleTransaction.fromShort}</code>
+                    <button class="copy-from-dash" style="margin-left: auto; background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px;">
+                        <i class="ri-file-copy-line"></i>
+                    </button>
+                </div>
+
+                <!-- Risk Score and Level -->
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 14px; border-radius: 12px; margin-bottom: 16px;">
                     <div>
-                        <small style="color: #94a3b8; font-size: 10px; font-weight: 600;">RISK LEVEL</small><br>
-                        <span style="background: ${ratingColor}; color: ${rating === 'MEDIUM' ? '#1e293b' : 'white'}; padding: 4px 10px; border-radius: 5px; font-weight: 700; font-size: 11px; display: inline-block; margin-top: 3px; text-transform: uppercase;">${rating}</span>
+                        <span style="color: #94a3b8; font-size: 10px; font-weight: 600; text-transform: uppercase;">RISK LEVEL</span><br>
+                        <span style="background: ${ratingColor}; color: ${rating === 'MEDIUM' ? '#1e293b' : 'white'}; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; display: inline-block; margin-top: 4px; text-transform: uppercase;">${rating}</span>
                     </div>
                     <div style="text-align: right;">
-                        <small style="color: #94a3b8; font-size: 10px; font-weight: 600;">RISK SCORE</small><br>
-                        <span style="font-size: 28px; font-weight: 800; color: ${ratingColor};">${sampleTransaction.riskScore}<small style="font-size: 12px; color: #64748b;">/100</small></span>
+                        <span style="color: #94a3b8; font-size: 10px; font-weight: 600; text-transform: uppercase;">RISK SCORE</span><br>
+                        <span style="font-size: 32px; font-weight: 800; color: ${ratingColor};">${sampleTransaction.riskScore}<span style="font-size: 12px; color: #64748b;">/100</span></span>
                     </div>
                 </div>
 
-                <!-- Date and Time - Compact Row -->
-                <div style="display: flex; gap: 12px; margin-bottom: 16px; padding: 4px 0;">
+                <!-- Date and Time -->
+                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         <i class="ri-calendar-line" style="color: #64748b; font-size: 14px;"></i>
                         <span style="color: #cbd5e1; font-size: 12px;">${formattedDate}</span>
@@ -159,25 +182,58 @@ document.getElementById('simulate-btn').onclick = function() {
                     </div>
                 </div>
 
-                <!-- Gas Information - More Compact -->
+                <!-- Gas Information -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-                    <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
-                        <small style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Gas Used</small>
-                        <div style="display: flex; align-items: baseline; gap: 3px; margin-top: 3px;">
+                    <div style="background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid #334155;">
+                        <span style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Gas Used</span>
+                        <div style="display: flex; align-items: baseline; gap: 3px; margin-top: 4px;">
                             <span style="color: #ffffff; font-size: 16px; font-weight: 600;">${sampleTransaction.gasUsed}</span>
                             <span style="color: #64748b; font-size: 9px;">units</span>
                         </div>
                     </div>
-                    <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155;">
-                        <small style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Gas Cost</small>
-                        <div style="display: flex; align-items: baseline; gap: 3px; margin-top: 3px;">
+                    <div style="background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid #334155;">
+                        <span style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Gas Cost</span>
+                        <div style="display: flex; align-items: baseline; gap: 3px; margin-top: 4px;">
                             <span style="color: #ffffff; font-size: 16px; font-weight: 600;">${sampleTransaction.gasCost}</span>
                             <span style="color: #64748b; font-size: 9px;">ETH</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Security Analysis Summary - More Compact -->
+                <!-- Trust & Similarity Metrics -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                    <!-- Trust Score -->
+                    <div style="background: #0f172a; padding: 12px; border-radius: 10px; border: 1px solid #334155;">
+                        <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+                            <i class="ri-shield-star-line" style="color: #8b5cf6; font-size: 12px;"></i>
+                            <span style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Trust Score</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: #ffffff; font-size: 18px; font-weight: 700;">${sampleTransaction.trustScore}%</span>
+                            <span style="color: ${trustBadge.color}; background: ${trustBadge.bg}; font-size: 8px; padding: 2px 6px; border-radius: 10px;">${trustBadge.text}</span>
+                        </div>
+                        <div style="height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden;">
+                            <div style="width: ${sampleTransaction.trustScore}%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #39d98a); border-radius: 2px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Similarity to Scams -->
+                    <div style="background: #0f172a; padding: 12px; border-radius: 10px; border: 1px solid #334155;">
+                        <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+                            <i class="ri-alert-line" style="color: #f97316; font-size: 12px;"></i>
+                            <span style="color: #94a3b8; font-size: 9px; text-transform: uppercase;">Scam Similarity</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: #ffffff; font-size: 18px; font-weight: 700;">${sampleTransaction.scamSimilarity}%</span>
+                            <span style="color: ${similarityBadge.color}; background: ${similarityBadge.bg}; font-size: 8px; padding: 2px 6px; border-radius: 10px;">${similarityBadge.text}</span>
+                        </div>
+                        <div style="height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden;">
+                            <div style="width: ${sampleTransaction.scamSimilarity}%; height: 100%; background: ${similarityBadge.color}; border-radius: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Analysis -->
                 <div style="margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
                         <i class="ri-shield-check-line" style="color: #8b5cf6; font-size: 14px;"></i>
@@ -188,43 +244,40 @@ document.getElementById('simulate-btn').onclick = function() {
                     </p>
                 </div>
 
-                <!-- Warnings - More Compact -->
+                <!-- Warnings (Collapsible) -->
                 ${sampleTransaction.warnings.length > 0 ? `
-                <div style="background: rgba(249, 115, 22, 0.1); border-left: 3px solid #f97316; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                <div style="background: rgba(249, 115, 22, 0.1); border-left: 3px solid #f97316; border-radius: 6px; margin-bottom: 16px; overflow: hidden;">
+                    <div class="warnings-header-dash" style="padding: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
                         <i class="ri-alert-line" style="color: #f97316; font-size: 14px;"></i>
-                        <h4 style="color: #f97316; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Warnings</h4>
+                        <h4 style="color: #f97316; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; flex: 1;">Security Warnings (${sampleTransaction.warnings.length})</h4>
+                        <i class="ri-arrow-down-s-line" style="color: #f97316; font-size: 14px; transition: transform 0.2s;"></i>
                     </div>
-                    <ul style="margin: 0; padding-left: 18px; color: #ffb347; font-size: 11px; line-height: 1.6;">
-                        ${sampleTransaction.warnings.map(warning => `<li>${warning}</li>`).join('')}
-                    </ul>
+                    <div class="warnings-content-dash" style="padding: 0 12px 12px 32px;">
+                        <ul style="margin: 0; padding-left: 16px; color: #ffb347; font-size: 11px; line-height: 1.6;">
+                            ${sampleTransaction.warnings.map(warning => `<li style="margin-bottom: 4px;">${warning}</li>`).join('')}
+                        </ul>
+                    </div>
                 </div>
                 ` : ''}
 
+                <!-- Risk Acknowledgment -->
                 ${isRiskWarningRequired ? `
-                <div id="risk-acknowledgment" style="background: #0f172a; border: 1.5px solid #f97316; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start;">
-                    <input type="checkbox" id="risk-checkbox" style="width: 16px; height: 16px; cursor: pointer; margin-top: 2px; accent-color: #f97316;">
-                    <label for="risk-checkbox" style="font-size: 12px; color: #ffb347; line-height: 1.4; cursor: pointer;">
+                <div style="background: #0f172a; border: 1.5px solid #f97316; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start;">
+                    <input type="checkbox" id="risk-checkbox-dash" style="width: 16px; height: 16px; cursor: pointer; margin-top: 2px; accent-color: #f97316;">
+                    <label for="risk-checkbox-dash" style="font-size: 12px; color: #ffb347; line-height: 1.4; cursor: pointer;">
                         <strong style="color: #f97316; display: block; margin-bottom: 2px;">I acknowledge the risks</strong>
                         This transaction has been flagged as ${rating} risk
                     </label>
                 </div>
                 ` : ''}
-
-                <!-- View Full Analysis Button - More Compact -->
-                <div style="margin-bottom: 10px;">
-                    <button id="view-full-analysis" style="width: 100%; padding: 8px; background: transparent; border: 1px solid #8b5cf6; color: #8b5cf6; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        <i class="ri-code-line"></i> View Full Technical Analysis
-                    </button>
-                </div>
             </div>
 
-            <!-- Footer with Action Buttons (fixed) -->
+            <!-- Footer with Action Buttons -->
             <div style="padding: 16px 20px; display: flex; gap: 10px; background: #0f172a; border-top: 1px solid #334155; flex-shrink: 0;">
-                <button id="btn-reject" style="flex: 1; padding: 12px; background: #d32f2f; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px;">
+                <button id="btn-reject-dash" style="flex: 1; padding: 12px; background: #d32f2f; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px;">
                     Reject
                 </button>
-                <button id="btn-accept" ${isRiskWarningRequired ? 'disabled' : ''} style="flex: 1; padding: 12px; background: ${isRiskWarningRequired ? '#334155' : '#008a3e'}; color: white; border: none; border-radius: 10px; cursor: ${isRiskWarningRequired ? 'not-allowed' : 'pointer'}; font-weight: 600; font-size: 13px;">
+                <button id="btn-accept-dash" ${isRiskWarningRequired ? 'disabled' : ''} style="flex: 1; padding: 12px; background: ${isRiskWarningRequired ? '#334155' : '#008a3e'}; color: white; border: none; border-radius: 10px; cursor: ${isRiskWarningRequired ? 'not-allowed' : 'pointer'}; font-weight: 600; font-size: 13px;">
                     Accept
                 </button>
             </div>
@@ -233,62 +286,169 @@ document.getElementById('simulate-btn').onclick = function() {
 
     document.body.appendChild(overlay);
 
-    // Event Listeners for checkbox and buttons
-    const checkbox = document.getElementById('risk-checkbox');
-    const acceptBtn = document.getElementById('btn-accept');
-    const rejectBtn = document.getElementById('btn-reject');
+    // Event Listeners
+    const closeBtn = overlay.querySelector('.close-dash-sim');
+    const checkbox = document.getElementById('risk-checkbox-dash');
+    const acceptBtn = document.getElementById('btn-accept-dash');
+    const rejectBtn = document.getElementById('btn-reject-dash');
 
-    // Checkbox handler (enables/disables accept button)
+    // Close button
+    closeBtn.onclick = () => overlay.remove();
+
+    // Copy contract address
+    const copyContractBtn = overlay.querySelector('.copy-contract-dash');
+    copyContractBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(sampleTransaction.contract).then(() => {
+            const originalHtml = this.innerHTML;
+            this.innerHTML = '<i class="ri-check-line" style="color: #39d98a;"></i>';
+            setTimeout(() => {
+                this.innerHTML = originalHtml;
+            }, 1500);
+        });
+    });
+
+    // Copy from address
+    const copyFromBtn = overlay.querySelector('.copy-from-dash');
+    copyFromBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        navigator.clipboard.writeText(sampleTransaction.from).then(() => {
+            const originalHtml = this.innerHTML;
+            this.innerHTML = '<i class="ri-check-line" style="color: #39d98a;"></i>';
+            setTimeout(() => {
+                this.innerHTML = originalHtml;
+            }, 1500);
+        });
+    });
+
+    // Warnings collapsible
+    const warningsHeader = overlay.querySelector('.warnings-header-dash');
+    const warningsContent = overlay.querySelector('.warnings-content-dash');
+    const collapseIcon = warningsHeader?.querySelector('i:last-child');
+
+    if (warningsHeader && warningsContent && collapseIcon) {
+        warningsHeader.addEventListener('click', () => {
+            if (warningsContent.style.display === 'none') {
+                warningsContent.style.display = 'block';
+                collapseIcon.style.transform = 'rotate(0deg)';
+            } else {
+                warningsContent.style.display = 'none';
+                collapseIcon.style.transform = 'rotate(-90deg)';
+            }
+        });
+    }
+
+    // Checkbox handler
     if (checkbox) {
         checkbox.onchange = function() {
             if (this.checked) {
                 acceptBtn.disabled = false;
                 acceptBtn.style.background = "#008a3e";
                 acceptBtn.style.cursor = "pointer";
-                acceptBtn.style.fontWeight = "700";
             } else {
                 acceptBtn.disabled = true;
                 acceptBtn.style.background = "#334155";
                 acceptBtn.style.cursor = "not-allowed";
-                acceptBtn.style.fontWeight = "600";
             }
         };
     }
 
-    // Copy contract address handler
-    const copyBtn = overlay.querySelector('.copy-contract-btn');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            navigator.clipboard.writeText(sampleTransaction.contract).then(() => {
-                const originalHtml = this.innerHTML;
-                this.innerHTML = '<i class="ri-check-line" style="color: #39d98a;"></i>';
-                setTimeout(() => {
-                    this.innerHTML = originalHtml;
-                }, 1500);
-            });
+    // Reject button - Modified to keep popup open until confirmed
+    rejectBtn.onclick = () => {
+        // Create rejection confirmation modal
+        const confirmOverlay = document.createElement('div');
+        confirmOverlay.style.cssText = `
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+            z-index: 2147483647; display: flex; align-items: center; 
+            justify-content: center; backdrop-filter: blur(2px);
+        `;
+        
+        confirmOverlay.innerHTML = `
+            <div style="background: #1e293b; width: 380px; padding: 24px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 1px solid rgba(139, 92, 246, 0.3);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div style="color: #d32f2f; font-size: 20px; background: #fee2e2; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</div>
+                    <h3 style="margin: 0; font-size: 18px; color: #ffffff;">Confirm Rejection</h3>
+                </div>
+                <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
+                    Are you sure you want to reject this transaction? This action cannot be undone.
+                </p>
+                <div style="display: flex; gap: 12px;">
+                    <button id="reject-cancel" style="flex: 1; padding: 12px; border: 1px solid #334155; background: transparent; border-radius: 10px; cursor: pointer; font-weight: 600; color: #ffffff;">Cancel</button>
+                    <button id="reject-confirm" style="flex: 1; padding: 12px; background: #d32f2f; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">Confirm Reject</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(confirmOverlay);
+        
+        // Cancel button - just remove confirmation modal
+        confirmOverlay.querySelector('#reject-cancel').onclick = () => confirmOverlay.remove();
+        
+        // Confirm button - remove both modals
+        confirmOverlay.querySelector('#reject-confirm').onclick = () => {
+            confirmOverlay.remove();
+            overlay.remove(); // Close simulation popup only after confirmation
+        };
+        
+        // Close on outside click
+        confirmOverlay.addEventListener('click', (e) => {
+            if (e.target === confirmOverlay) confirmOverlay.remove();
         });
-    }
+    };
 
-    // View Full Analysis button handler
-    const viewAnalysisBtn = overlay.querySelector('#view-full-analysis');
-    if (viewAnalysisBtn) {
-        viewAnalysisBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            showTechnicalAnalysisModal(sampleTransaction, overlay);
-        });
-    }
-
-    // REJECT button handler (uses your existing showRejectionModal function)
-    rejectBtn.onclick = () => showRejectionModal(overlay);
-
-    // ACCEPT button handler (uses your existing showApprovalModal function)
+    // Accept button - Modified to keep popup open until confirmed
     acceptBtn.onclick = () => { 
         if (!acceptBtn.disabled) {
-            showApprovalModal(overlay, rating, ratingColor);
+            // Create approval confirmation modal
+            const confirmOverlay = document.createElement('div');
+            confirmOverlay.style.cssText = `
+                position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+                z-index: 2147483647; display: flex; align-items: center; 
+                justify-content: center; backdrop-filter: blur(2px);
+            `;
+            
+            confirmOverlay.innerHTML = `
+                <div style="background: #1e293b; width: 400px; padding: 24px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 1px solid rgba(139, 92, 246, 0.3);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="color: #008a3e; font-size: 20px; background: #f0fdf4; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✓</div>
+                        <h3 style="margin: 0; font-size: 18px; color: #ffffff;">Confirm Approval</h3>
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 16px;">You are about to approve the following transaction:</p>
+                    <div style="background: #0f172a; padding: 16px; border-radius: 12px; font-size: 13px; line-height: 1.8; border: 1px solid #334155; margin-bottom: 20px;">
+                        <span style="color: #64748b;">Function:</span> <strong style="color: #ffffff;">${sampleTransaction.title}</strong><br>
+                        <span style="color: #64748b;">Risk Level:</span> <span style="background: ${ratingColor}; color: ${rating === 'MEDIUM' ? '#1e293b' : 'white'}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">${rating}</span><br>
+                        <span style="color: #64748b;">Contract:</span> <code style="font-size: 11px; color: #94a3b8;">${sampleTransaction.contractShort}</code>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="approve-cancel" style="flex: 1; padding: 12px; border: 1px solid #334155; background: transparent; border-radius: 10px; cursor: pointer; font-weight: 600; color: #ffffff;">Cancel</button>
+                        <button id="approve-confirm" style="flex: 1; padding: 12px; background: #008a3e; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">Confirm Approve</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(confirmOverlay);
+            
+            // Cancel button - just remove confirmation modal
+            confirmOverlay.querySelector('#approve-cancel').onclick = () => confirmOverlay.remove();
+            
+            // Confirm button - remove both modals
+            confirmOverlay.querySelector('#approve-confirm').onclick = () => {
+                confirmOverlay.remove();
+                overlay.remove(); // Close simulation popup only after confirmation
+            };
+            
+            // Close on outside click
+            confirmOverlay.addEventListener('click', (e) => {
+                if (e.target === confirmOverlay) confirmOverlay.remove();
+            });
         }
     };
-};
+
+    // Close on outside click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+}
 
 // Technical Analysis Modal for simulation (add this AFTER the main function)
 function showTechnicalAnalysisModal(transaction, mainOverlay) {
