@@ -4,8 +4,6 @@ Simulation → Translator → RAG → JSON output for LLM Verdict Engine
 
 Usage:
     py simulate_and_analyze.py
-    py simulate_and_analyze.py --unsafe
-    py simulate_and_analyze.py --safe
 """
 
 from __future__ import annotations
