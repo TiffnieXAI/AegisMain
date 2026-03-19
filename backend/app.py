@@ -22,7 +22,7 @@ from web3 import Web3
 from substrateinterface import SubstrateInterface
 from eth_account.messages import encode_defunct
 from eth_account import Account
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 app = FastAPI()
 # --- CONFIGURATION ---
@@ -88,9 +88,10 @@ registry_contract = w3.eth.contract(
 CHAIN_CURRENCY = _detect_chain_currency(w3)
 
 # CORS middleware here (frontend integration ito)
+origin = ["http://localhost:5500", "http://127.0.0.1:5500"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origin,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -988,27 +989,6 @@ def check_trust_registry(address: str) -> dict:
         }
 
 
-# polkadot identity
-
-def get_polkadot_identity(address: str) -> dict:
-    try:
-        substrate = SubstrateInterface(url=PEOPLE_CHAIN_RPC)
-        search_address = address
-        if address.startswith("0x") and len(address) == 42:
-            search_address = "0x" + address[2:].lower().zfill(64)
-        result = substrate.query("Identity", "IdentityOf", [search_address])
-        if result and result.value:
-            display_data = result.value.get("info", {}).get("display", {})
-            if "Raw" in display_data:
-                raw_name = display_data["Raw"]
-                name = (
-                    bytes.fromhex(raw_name[2:]).decode("utf-8")
-                    if raw_name.startswith("0x") else raw_name
-                )
-                return {"verified": True, "name": name}
-        return {"verified": False, "name": None}
-    except Exception as exc:
-        return {"verified": False, "name": None, "error": str(exc)}
 
 
 # main endpoints
@@ -1032,7 +1012,6 @@ async def analyze_intent(tx_payload: TransactionRequest):
     history = scan_event_history(target)
 
     registry = check_trust_registry(target)
-    identity = get_polkadot_identity(target)
 
     preflight = {}
     try:
@@ -1055,8 +1034,7 @@ async def analyze_intent(tx_payload: TransactionRequest):
         "analysis":       analysis,
         "history":        history,
         "trust": {
-            "registry":          registry,
-            "polkadot_identity": identity,
+            "registry":          registry
         },
     }
 
@@ -1065,8 +1043,8 @@ async def analyze_intent(tx_payload: TransactionRequest):
 
 @app.post("/wallets/")
 def create_wallet(wallet: WalletUser, session: Session = Depends(get_session)):
-    existing_wallet = session.get(WalletUser, wallet.wallet_address)
-    if existing_wallet:
+    existing_wallet = session.get(WalletUser, wallet.wallet_address) 
+    if existing_wallet: 
         raise HTTPException(status_code=400, detail="Wallet already exists")
     now = datetime.now(timezone.utc)
     wallet.created_timestamp = now
@@ -1075,7 +1053,6 @@ def create_wallet(wallet: WalletUser, session: Session = Depends(get_session)):
     session.commit()
     session.refresh(wallet)
     return wallet
-
 
 @app.get("/wallets/")
 def get_wallets(session: Session = Depends(get_session)):
@@ -1148,7 +1125,7 @@ def get_transactions(
     limit: int = Query(default=100),
     session: Session = Depends(get_session)
 ):
-    query = session.query(UserTransaction)
+    query = session.query(UserTransaction) 
     if wallet_address:
         query = query.filter(UserTransaction.wallet_address == wallet_address)
     if status is not None:
@@ -1157,7 +1134,35 @@ def get_transactions(
         query = query.filter(UserTransaction.risk_level == risk)
     results = query.order_by(
         UserTransaction.timestamp.desc()).limit(limit).all()
+    
     return {"transactions": results, "total": len(results)}
+#{"approved": 2, "pending": 1, "rejected": 0} status 
+# {} risk 
+# query.filter(UserTransaction.status == )
+# endpoint def get_Transactions_by_filter(walletaddress, session, statusfilter, riskfilter)
+# query.filter(blahblah.status == (statusfilter == "All"? {0,1,2}: statusfilter))
+
+@app.get("/transactions/filter")
+def get_transactions_by_filter(
+    status_filter: int, # -1 for all
+    risk_filter: int, # -1 for all
+    wallet_address: Optional[str] = Query(default=None),
+    session: Session = Depends(get_session), 
+    ):
+
+    query = session.query(UserTransaction, UserThreatRecord).join(UserThreatRecord, 
+                                                                  UserThreatRecord.transaction_hash == UserTransaction.transaction_hash, 
+                                                                  isouter=True).filter(UserTransaction.wallet_address == wallet_address) 
+    
+    if status_filter != -1:
+        query = query.filter(UserTransaction.status == status_filter)
+        
+    if risk_filter != -1:
+        query = query.filter(UserThreatRecord.risk_level == risk_filter)
+
+    results = query.order_by(UserTransaction.timestamp.desc()).all()
+
+    return results
 
 
 @app.get("/transactions/{wallet_address}")
@@ -1385,12 +1390,13 @@ def get_stats(wallet_address: str, session: Session = Depends(get_session)):
 
     threats_blocked = session.exec(
         select(func.count()).where(
-            UserThreatRecord.wallet_address == wallet_address)
+            UserTransaction.wallet_address == wallet_address,
+            UserTransaction.status == 2)
     ).one()
     safe_transactions = session.exec(
         select(func.count()).where(
             UserTransaction.wallet_address == wallet_address,
-            UserTransaction.risk_level == 0)
+            UserTransaction.status == 1)
     ).one()
     total_scanned = session.exec(
         select(func.count()).where(
@@ -1399,13 +1405,19 @@ def get_stats(wallet_address: str, session: Session = Depends(get_session)):
     pending = session.exec(
         select(func.count()).where(
             UserTransaction.wallet_address == wallet_address,
-            UserTransaction.status == 1)
+            UserTransaction.status == 0)
     ).one()
-
-    protection_rate = 0
-    if total_scanned > 0:
-        protection_rate = (safe_transactions / total_scanned) * 100
-
+    high_threats_blocked = session.exec(
+        select(func.count()).select_from(UserTransaction).join(
+            UserThreatRecord,
+            UserTransaction.transaction_hash == UserThreatRecord.transaction_hash
+        ).where(
+            UserTransaction.wallet_address == wallet_address,
+            UserThreatRecord.risk_level >= 2)
+    ).one()
+    protection_rate = 100
+    if threats_blocked > 0:
+        protection_rate -= ((high_threats_blocked / threats_blocked) * 100)
     return {
         "threats_blocked":   threats_blocked,
         "safe_transactions": safe_transactions,
@@ -1414,6 +1426,105 @@ def get_stats(wallet_address: str, session: Session = Depends(get_session)):
         "protection_rate":   round(protection_rate, 2),
     }
 
+@app.get("/stats/L7D/{wallet_address}")
+def get_stats_L7D(wallet_address: str, session: Session = Depends(get_session)):
+    wallet = session.get(WalletUser, wallet_address)
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    L7D = datetime.now(timezone.utc) - timedelta(days=7)
+    threats_blocked_L7D = session.exec(
+        select(func.count()).where(
+            UserTransaction.wallet_address == wallet_address,
+            UserTransaction.status == 2,
+            UserTransaction.timestamp >= L7D)
+    ).one()
+    threats_blocked = session.exec(
+        select(func.count()).where(
+            UserTransaction.wallet_address == wallet_address,
+            UserTransaction.status == 2)
+    ).one()
+    transactions_approved = session.exec(
+        select(func.count()).where(
+            UserTransaction.wallet_address == wallet_address,
+            UserTransaction.status == 1,
+            UserTransaction.timestamp >= L7D)
+    ).one()
+    high_threats_blocked = session.exec(
+        select(func.count()).select_from(UserTransaction).join(
+            UserThreatRecord,
+            UserTransaction.transaction_hash == UserThreatRecord.transaction_hash
+        ).where(
+            UserTransaction.wallet_address == wallet_address,
+            UserTransaction.status == 0,
+            UserThreatRecord.risk_level >= 2)
+    ).one()
+
+    protection_rate = 100
+    if threats_blocked > 0:
+        protection_rate -= ((high_threats_blocked / threats_blocked) * 100)
+    return {
+        "threats_blocked":   threats_blocked_L7D,
+        "transactions_approved": transactions_approved,
+        "protection_rate":   round(protection_rate, 2)
+    }
+
+@app.get("/alerts/recent/{wallet_address}")
+def get_recent_alerts(wallet_address: str, session: Session = Depends(get_session)):
+    try:
+        limit = 3
+        wallet = session.get(WalletUser, wallet_address)
+        if not wallet:
+            raise HTTPException(status_code=404, detail="Wallet not found")
+        
+        txData = (select(UserTransaction.transaction_hash,
+                        UserThreatRecord.risk_level,
+                        UserThreatRecord.threat_description,
+                        UserTransaction.timestamp)
+                        .join(UserThreatRecord, UserTransaction.transaction_hash == UserThreatRecord.transaction_hash)
+                        .where(UserTransaction.wallet_address == wallet_address,
+                            UserTransaction.status == 0,
+                            UserThreatRecord.risk_level >= 2)
+                        .order_by(UserTransaction.timestamp.desc()).limit(limit))
+        
+        results = session.exec(txData).all()
+
+        alerts = []
+
+        now = datetime.now(timezone.utc)
+
+        for tx_hash, risk_level, description, timestamp in results:
+            if risk_level == 5:
+                severity = "UNKNOWN"
+            elif risk_level == 4:
+                severity = "CRITICAL"
+            elif risk_level >= 2:
+                severity = "WARNING"
+            
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=timezone.utc)
+
+            delta = now - timestamp
+            if delta.days >= 1:
+                timeAgo = f"{delta.days} day{'s' if delta.days > 1 else ''} ago"
+            elif delta.seconds >= 3600:
+                hours = delta.seconds // 3600
+                timeAgo = f"{hours} hour{'s' if hours > 1 else ''} ago"
+            elif delta.seconds >= 60:
+                minutes = delta.seconds // 60
+                timeAgo = f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+            else:
+                timeAgo = "Just now"
+
+            alerts.append({
+                "title": description,
+                "severity": severity,
+                "timeAgo": timeAgo
+            })
+        return alerts
+    except Exception as e:
+        print("Eror in alerts:", e)
+        return {"alerts": [], "error": str(e)}
 
 @app.get("/auth/nonce/{wallet_address}")
 def get_nonce(wallet_address: str, session: Session = Depends(get_session)):
