@@ -390,35 +390,6 @@ function showTechnicalAnalysisModal(transaction, mainOverlay) {
     });
 }
 
-// 2. Rejection Modal
-function showRejectionModal(mainOverlay) {
-    const modal = document.createElement('div');
-    modal.style.cssText = `position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px);`;
-
-    modal.innerHTML = `
-        <div style="background: #1e293b; width: 400px; padding: 24px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); font-family: 'Inter', sans-serif;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                <div style="color: #d32f2f; font-size: 24px; background: #fee2e2; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</div>
-                <h3 style="margin: 0; font-size: 18px; color: #ffffff;">Confirm Rejection</h3>
-            </div>
-            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
-                Are you sure you want to reject this transaction? This action will cancel the request immediately.
-            </p>
-            <div style="display: flex; gap: 12px;">
-                <button id="reject-cancel" style="flex: 1; padding: 12px; border: 1px solid #334155; background: transparent; border-radius: 10px; cursor: pointer; font-weight: 600; color: #ffffff;">Cancel</button>
-                <button id="reject-confirm" style="flex: 1; padding: 12px; background: #d32f2f; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">Confirm & Reject</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    document.getElementById('reject-cancel').onclick = () => modal.remove();
-    document.getElementById('reject-confirm').onclick = () => {
-        modal.remove();
-        mainOverlay.remove();
-    };
-}
-
 // 3. Rejection Modal Logic
 function showRejectionModal(mainOverlay) {
     const modal = document.createElement('div');
