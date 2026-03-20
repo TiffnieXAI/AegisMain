@@ -13,24 +13,29 @@ from models.wallet import WalletUser, UserTransaction, UserThreatRecord
 from typing import Optional
 from sqlalchemy import func
 from sqlmodel import Session, select
-from dbsettings import get_session
+from dbsettings import get_session, engine
 from decimal import Decimal
 import eth_abi
+import hashlib
 import subprocess
 import tempfile
 import secrets
 import ast
 import json
-# fmt: off
 import asyncio
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', 'ai', 'rag-semantic-layer')))
-from simulate_and_analyze import run_pipeline # noqa: E402
-# fmt: on
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
+
+AI_VERDICT_PATH = os.path.join(ROOT_DIR, 'ai', 'AI_verdict')
+if AI_VERDICT_PATH not in sys.path:
+    sys.path.append(AI_VERDICT_PATH)
+
+from app_AI.main import analyze_from_sources as ai_analyze_from_sources
 
 app = FastAPI()
 # --- CONFIGURATION ---
@@ -997,6 +1002,78 @@ def check_trust_registry(address: str) -> dict:
         }
 
 
+def save_analysis_to_db(
+    sender: str,
+    target: str,
+    simulation: dict,
+    analysis: dict,
+    pipeline: dict,
+    transaction_hash: str | None = None,
+) -> dict:
+    """Persist analysis payloads into MySQL-backed tables.
+
+    This uses SQLModel objects in models.analysis and models.wallet.
+    """
+    if transaction_hash is None:
+        transaction_hash = hashlib.sha256(
+            f"{sender}|{target}|{simulation.get('simulation_id','')}|{datetime.now(timezone.utc).isoformat()}".encode()
+        ).hexdigest()
+
+    sim_summary = "; ".join(analysis.get("summary", []))
+    ai_summary = pipeline.get("transaction_intent") or ""
+    warning_text = "; ".join([w.get("detail", "") for w in analysis.get("warnings", [])])
+    trust_score = 0
+
+    # simple trust score inference
+    if pipeline.get("rag_status") == "error":
+        trust_score = 0
+    elif analysis.get("high_risk"):
+        trust_score = 20
+    elif pipeline.get("risk_tier") == "LOW":
+        trust_score = 90
+    else:
+        trust_score = 50
+
+    try:
+        with Session(engine) as session:
+            # Ensure a user transaction is stored for cross-table cleanup and listing
+            user_tx = UserTransaction(
+                transaction_hash=transaction_hash,
+                wallet_address=sender,
+                address_destination=target,
+                chain_id=str(w3.eth.chain_id),
+                contract_address=target,
+                gasUsed=str(simulation.get("gas_cost", {}).get("raw", 0)),
+                gasCost=str(simulation.get("gas_cost", {}).get("human", "0")),
+                method_called=analysis.get("summary", ["unknown"])[0][:100],
+                timestamp=datetime.now(timezone.utc),
+                status=0,
+            )
+            session.add(user_tx)
+
+            sim_row = SimulationResult(
+                transaction_hash=transaction_hash,
+                simulation_summary=sim_summary[:255],
+            )
+            session.add(sim_row)
+
+            ai_row = AIAnalysis(
+                transaction_hash=transaction_hash,
+                ai_summary=ai_summary[:255],
+                recommendation=str(pipeline.get("standard_baseline", ""))[:255],
+                warning=warning_text[:255],
+                trust_score=int(trust_score),
+            )
+            session.add(ai_row)
+
+            session.commit()
+
+        return {"saved": True, "transaction_hash": transaction_hash}
+
+    except Exception as exc:
+        return {"saved": False, "error": str(exc), "transaction_hash": transaction_hash}
+
+
 # main endpoints
 
 @app.get("/")
@@ -1032,7 +1109,13 @@ async def analyze_full(tx_payload: TransactionRequest):
     except Exception as exc:
         preflight = {"error": str(exc)}
 
+    # transaction_hash is synthetic (no real chain tx yet) and used for local persistence keys
+    simulated_tx_hash = hashlib.sha256(
+        f"{sender}|{target}|{data}|{value}|{datetime.now(timezone.utc).isoformat()}".encode()
+    ).hexdigest()
+
     sim_output = {
+        "transaction_hash": simulated_tx_hash,
         "target_address": target,
         "sender_address": sender,
         "preflight":      preflight,
@@ -1046,7 +1129,7 @@ async def analyze_full(tx_payload: TransactionRequest):
     pipeline = await loop.run_in_executor(None, run_pipeline, "tx", sim_output)
 
     if "error" in pipeline:
-        return {
+        error_response = {
             **sim_output,
             "pipeline": {
                 "risk_tier":              None,
@@ -1060,11 +1143,39 @@ async def analyze_full(tx_payload: TransactionRequest):
                 "latency_ms":             None,
             }
         }
+        save_result = save_analysis_to_db(
+            sender, target, simulation, analysis, pipeline,
+            transaction_hash=simulated_tx_hash,
+        )
+        error_response["storage"] = save_result
+        return error_response
 
-    return {
+    save_result = save_analysis_to_db(
+        sender, target, simulation, analysis, pipeline,
+        transaction_hash=simulated_tx_hash,
+    )
+
+    final_response = {
         **sim_output,
         "pipeline": pipeline,
+        "storage":  save_result,
     }
+
+    # Layer 3: AI verdict from AI_verdict/app/main.py
+    try:
+        ai_input = {
+            "rag": final_response.get("pipeline", {}),
+            "simulation": final_response.get("simulation", {}),
+        }
+        ai_output = ai_analyze_from_sources(ai_input)
+        final_response["ai_verdict"] = ai_output
+    except Exception as exc:
+        final_response["ai_verdict"] = {
+            "error": "ai_analysis_failed",
+            "error_detail": str(exc),
+        }
+
+    return final_response
 
 
 # mga kalat na crud operations BAHAHAHAHA
