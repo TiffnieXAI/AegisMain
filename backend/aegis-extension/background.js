@@ -79,7 +79,7 @@ function handlePopupDecision(message) {
 
 // ── 2. Fetch and normalize ─────────────────────────────────────────────────────
 async function fetchAnalysis(txData) {
-    const response = await fetch(`${API_BASE}/analyze-intent`, {
+    const response = await fetch(`${API_BASE}/analyze-full`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

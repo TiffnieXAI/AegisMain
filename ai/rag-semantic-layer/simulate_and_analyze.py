@@ -13,11 +13,12 @@ import json
 import httpx
 from simulation_translator import build_simulation_report, assess_risk_level
 
-RAG_API = "http://localhost:8000/analyze-intent"
+RAG_API = "http://localhost:8001/analyze-intent"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Pipeline — Steps 1 to 5
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def run_pipeline(label: str, simulation: dict) -> dict:
     """
@@ -50,12 +51,12 @@ def run_pipeline(label: str, simulation: dict) -> dict:
     # ── Step 4: Send to RAG ───────────────────────────────────────────────
     try:
         response = httpx.post(RAG_API, json=report, timeout=15)
-        rag      = response.json()
+        rag = response.json()
     except httpx.ConnectError:
         return {"error": "api.py is not running. Start it with: py api.py"}
 
     # ── Step 5: Assemble verdict payload for LLM ─────────────────────────
-    return{
+    return {
         "risk_tier":              risk_tier,
         "rag_status":             rag.get("status"),
         "transaction_intent":     rag.get("transaction_intent"),

@@ -1,28 +1,36 @@
 from __future__ import annotations
-import json
+from datetime import datetime, timezone, timedelta
+from eth_account import Account
+from eth_account.messages import encode_defunct
+from substrateinterface import SubstrateInterface
+from web3 import Web3
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Depends, Query
+from models.session import AuthSession
+from models.analysis import ContractRegistryCache, SimulationResult, AIAnalysis
+from models.wallet import WalletUser, UserTransaction, UserThreatRecord
+from typing import Optional
+from sqlalchemy import func
+from sqlmodel import Session, select
+from dbsettings import get_session
+from decimal import Decimal
+import eth_abi
+import subprocess
+import tempfile
+import secrets
 import ast
+import json
+# fmt: off
+import asyncio
 import sys
 import os
-import secrets
-import tempfile
-import subprocess
-import eth_abi
-from decimal import Decimal
-from dbsettings import get_session
-from sqlmodel import Session, select
-from sqlalchemy import func
-from typing import Optional
-from models.wallet import WalletUser, UserTransaction, UserThreatRecord
-from models.analysis import ContractRegistryCache, SimulationResult, AIAnalysis
-from models.session import AuthSession
-from fastapi import FastAPI, HTTPException, Depends, Query
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from web3 import Web3
-from substrateinterface import SubstrateInterface
-from eth_account.messages import encode_defunct
-from eth_account import Account
-from datetime import datetime, timezone, timedelta
+
+sys.path.append(os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', 'ai', 'rag-semantic-layer')))
+from simulate_and_analyze import run_pipeline # noqa: E402
+# fmt: on
+
 
 app = FastAPI()
 # --- CONFIGURATION ---
@@ -989,8 +997,6 @@ def check_trust_registry(address: str) -> dict:
         }
 
 
-
-
 # main endpoints
 
 @app.get("/")
@@ -998,8 +1004,8 @@ async def root():
     return {"message": "A.E.G.I.S. Backend Online", "docs": "/docs"}
 
 
-@app.post("/analyze-intent")
-async def analyze_intent(tx_payload: TransactionRequest):
+@app.post("/analyze-full")
+async def analyze_full(tx_payload: TransactionRequest):
     sender = tx_payload.sender
     target = tx_payload.to
     data = tx_payload.data
@@ -1026,16 +1032,38 @@ async def analyze_intent(tx_payload: TransactionRequest):
     except Exception as exc:
         preflight = {"error": str(exc)}
 
-    return {
+    sim_output = {
         "target_address": target,
         "sender_address": sender,
         "preflight":      preflight,
         "simulation":     simulation,
         "analysis":       analysis,
         "history":        history,
-        "trust": {
-            "registry":          registry
-        },
+        "trust":          {"registry": registry},
+    }
+
+    loop = asyncio.get_event_loop()
+    pipeline = await loop.run_in_executor(None, run_pipeline, "tx", sim_output)
+
+    if "error" in pipeline:
+        return {
+            **sim_output,
+            "pipeline": {
+                "risk_tier":              None,
+                "rag_status":             "error",
+                "rag_error":              pipeline["error"],
+                "transaction_intent":     None,
+                "standard_baseline":      None,
+                "vulnerability_evidence": [],
+                "scam_evidence":          [],
+                "llm_context":            None,
+                "latency_ms":             None,
+            }
+        }
+
+    return {
+        **sim_output,
+        "pipeline": pipeline,
     }
 
 
@@ -1043,8 +1071,8 @@ async def analyze_intent(tx_payload: TransactionRequest):
 
 @app.post("/wallets/")
 def create_wallet(wallet: WalletUser, session: Session = Depends(get_session)):
-    existing_wallet = session.get(WalletUser, wallet.wallet_address) 
-    if existing_wallet: 
+    existing_wallet = session.get(WalletUser, wallet.wallet_address)
+    if existing_wallet:
         raise HTTPException(status_code=400, detail="Wallet already exists")
     now = datetime.now(timezone.utc)
     wallet.created_timestamp = now
@@ -1053,6 +1081,7 @@ def create_wallet(wallet: WalletUser, session: Session = Depends(get_session)):
     session.commit()
     session.refresh(wallet)
     return wallet
+
 
 @app.get("/wallets/")
 def get_wallets(session: Session = Depends(get_session)):
@@ -1125,7 +1154,7 @@ def get_transactions(
     limit: int = Query(default=100),
     session: Session = Depends(get_session)
 ):
-    query = session.query(UserTransaction) 
+    query = session.query(UserTransaction)
     if wallet_address:
         query = query.filter(UserTransaction.wallet_address == wallet_address)
     if status is not None:
@@ -1134,29 +1163,30 @@ def get_transactions(
         query = query.filter(UserTransaction.risk_level == risk)
     results = query.order_by(
         UserTransaction.timestamp.desc()).limit(limit).all()
-    
+
     return {"transactions": results, "total": len(results)}
-#{"approved": 2, "pending": 1, "rejected": 0} status 
-# {} risk 
+# {"approved": 2, "pending": 1, "rejected": 0} status
+# {} risk
 # query.filter(UserTransaction.status == )
 # endpoint def get_Transactions_by_filter(walletaddress, session, statusfilter, riskfilter)
 # query.filter(blahblah.status == (statusfilter == "All"? {0,1,2}: statusfilter))
 
+
 @app.get("/transactions/filter")
 def get_transactions_by_filter(
-    status_filter: int, # -1 for all
-    risk_filter: int, # -1 for all
+    status_filter: int,  # -1 for all
+    risk_filter: int,  # -1 for all
     wallet_address: Optional[str] = Query(default=None),
-    session: Session = Depends(get_session), 
-    ):
+    session: Session = Depends(get_session),
+):
 
-    query = session.query(UserTransaction, UserThreatRecord).join(UserThreatRecord, 
-                                                                  UserThreatRecord.transaction_hash == UserTransaction.transaction_hash, 
-                                                                  isouter=True).filter(UserTransaction.wallet_address == wallet_address) 
-    
+    query = session.query(UserTransaction, UserThreatRecord).join(UserThreatRecord,
+                                                                  UserThreatRecord.transaction_hash == UserTransaction.transaction_hash,
+                                                                  isouter=True).filter(UserTransaction.wallet_address == wallet_address)
+
     if status_filter != -1:
         query = query.filter(UserTransaction.status == status_filter)
-        
+
     if risk_filter != -1:
         query = query.filter(UserThreatRecord.risk_level == risk_filter)
 
@@ -1426,6 +1456,7 @@ def get_stats(wallet_address: str, session: Session = Depends(get_session)):
         "protection_rate":   round(protection_rate, 2),
     }
 
+
 @app.get("/stats/L7D/{wallet_address}")
 def get_stats_L7D(wallet_address: str, session: Session = Depends(get_session)):
     wallet = session.get(WalletUser, wallet_address)
@@ -1469,6 +1500,7 @@ def get_stats_L7D(wallet_address: str, session: Session = Depends(get_session)):
         "protection_rate":   round(protection_rate, 2)
     }
 
+
 @app.get("/alerts/recent/{wallet_address}")
 def get_recent_alerts(wallet_address: str, session: Session = Depends(get_session)):
     try:
@@ -1476,17 +1508,17 @@ def get_recent_alerts(wallet_address: str, session: Session = Depends(get_sessio
         wallet = session.get(WalletUser, wallet_address)
         if not wallet:
             raise HTTPException(status_code=404, detail="Wallet not found")
-        
+
         txData = (select(UserTransaction.transaction_hash,
-                        UserThreatRecord.risk_level,
-                        UserThreatRecord.threat_description,
-                        UserTransaction.timestamp)
-                        .join(UserThreatRecord, UserTransaction.transaction_hash == UserThreatRecord.transaction_hash)
-                        .where(UserTransaction.wallet_address == wallet_address,
-                            UserTransaction.status == 0,
-                            UserThreatRecord.risk_level >= 2)
-                        .order_by(UserTransaction.timestamp.desc()).limit(limit))
-        
+                         UserThreatRecord.risk_level,
+                         UserThreatRecord.threat_description,
+                         UserTransaction.timestamp)
+                  .join(UserThreatRecord, UserTransaction.transaction_hash == UserThreatRecord.transaction_hash)
+                  .where(UserTransaction.wallet_address == wallet_address,
+                         UserTransaction.status == 0,
+                         UserThreatRecord.risk_level >= 2)
+                  .order_by(UserTransaction.timestamp.desc()).limit(limit))
+
         results = session.exec(txData).all()
 
         alerts = []
@@ -1500,7 +1532,7 @@ def get_recent_alerts(wallet_address: str, session: Session = Depends(get_sessio
                 severity = "CRITICAL"
             elif risk_level >= 2:
                 severity = "WARNING"
-            
+
             if timestamp.tzinfo is None:
                 timestamp = timestamp.replace(tzinfo=timezone.utc)
 
@@ -1525,6 +1557,7 @@ def get_recent_alerts(wallet_address: str, session: Session = Depends(get_sessio
     except Exception as e:
         print("Eror in alerts:", e)
         return {"alerts": [], "error": str(e)}
+
 
 @app.get("/auth/nonce/{wallet_address}")
 def get_nonce(wallet_address: str, session: Session = Depends(get_session)):
