@@ -1162,10 +1162,17 @@ footer a {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 80px 50px;
+    padding: 25px 50px;
     background: linear-gradient(180deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%);
     border-top: 1px solid rgba(139, 92, 246, 0.2);
     border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.mem-container h2{
+    display: flex;
+    align-items: center;
+    padding: 25px 50px;
+    text-align: center;
 }
 
 .main-title {
