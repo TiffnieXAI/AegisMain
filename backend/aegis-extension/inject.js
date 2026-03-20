@@ -1,4 +1,4 @@
-
+// inject.js
 (function () {
     if (window.__aegisInstalled) return;
     window.__aegisInstalled = true;
@@ -53,6 +53,9 @@
 
             console.log('[A.E.G.I.S.] Intercepted tx:', txData);
 
+            // ── Show loading banner immediately ───────────────────────────────
+            showLoadingBanner();
+
             return new Promise((resolve, reject) => {
                 const requestId = crypto.randomUUID();
                 let settled = false;
@@ -62,25 +65,20 @@
                     settled = true;
                     clearTimeout(timeoutId);
                     window.removeEventListener('message', onReply);
+                    removeLoadingBanner();
                     fn();
                 }
 
-                // ── Only accept genuine replies from content.js ──────────────
-                // A real reply has: aegis:true, matching requestId,
-                // and either an analysis object OR an error string.
-                // It does NOT have direction:'page-to-bg' (that's our outgoing msg).
                 function onReply(event) {
-                    if (event.source !== window)          return;
-                    if (!event.data?.aegis)               return;
-                    if (event.data.requestId !== requestId) return;
-                    if (event.data.direction === 'page-to-bg') return; // ignore echo
-                    // Must have analysis or error — ignore anything else
-                    if (!('analysis' in event.data) && !('error' in event.data)) return;
+                    if (event.source !== window)               return;
+                    if (!event.data?.aegis)                    return;
+                    if (event.data.requestId !== requestId)    return;
+                    if (event.data.direction === 'page-to-bg') return;
+                    if (!('decision' in event.data) && !('error' in event.data)) return;
 
-                    const result = event.data;
-                    console.log('[A.E.G.I.S.] Reply received:', result);
+                    console.log('[A.E.G.I.S.] Decision received:', event.data);
 
-                    if (result.error) {
+                    if (event.data.error) {
                         settle(() => {
                             const proceed = confirm(
                                 'A.E.G.I.S. could not reach the backend.\n\nProceed anyway?'
@@ -91,33 +89,22 @@
                         return;
                     }
 
-                    if (!result.analysis) {
-                        console.error('[A.E.G.I.S.] Empty analysis in reply — failing open.');
+                    if (event.data.decision === 'accept') {
+                        console.log('[A.E.G.I.S.] User accepted — forwarding to MetaMask.');
                         settle(() => resolve(originalRequest(args)));
-                        return;
+                    } else {
+                        console.log('[A.E.G.I.S.] User rejected — transaction blocked.');
+                        settle(() => reject(new Error('[A.E.G.I.S.] Transaction rejected by user.')));
                     }
-
-                    console.log('[A.E.G.I.S.] Analysis result:', result.analysis);
-
-                    if (!result.analysis.safe) {
-                        settle(() => {
-                            showThreatBanner(result.analysis);
-                            reject(new Error('[A.E.G.I.S.] Blocked: ' + result.analysis.reason));
-                        });
-                        return;
-                    }
-
-                    console.log('[A.E.G.I.S.] Safe — forwarding to MetaMask.');
-                    settle(() => resolve(originalRequest(args)));
                 }
 
                 window.addEventListener('message', onReply);
 
-                // Hard timeout — fail open after 20s so the user is never stuck
+                // Hard timeout — 5 minutes (user may be reading the popup)
                 const timeoutId = setTimeout(() => {
-                    console.warn('[A.E.G.I.S.] Timed out waiting for backend — failing open.');
-                    settle(() => resolve(originalRequest(args)));
-                }, 20000);
+                    console.warn('[A.E.G.I.S.] Popup timed out after 5min — blocking tx.');
+                    settle(() => reject(new Error('[A.E.G.I.S.] Timed out waiting for user decision.')));
+                }, 300000);
 
                 window.postMessage({
                     aegis:     true,
@@ -131,60 +118,55 @@
         console.log('[A.E.G.I.S.] window.ethereum.request wrapped successfully.');
     }
 
-    function showThreatBanner(analysis) {
-        const existing = document.getElementById('__aegis_banner');
-        if (existing) existing.remove();
-
-        const severityColor = {
-            CRITICAL: '#e74c3c',
-            HIGH:     '#e74c3c',
-            MEDIUM:   '#f39c12',
-            LOW:      '#39d98a',
-        }[analysis.severity] ?? '#e74c3c';
+    // ── Loading banner ─────────────────────────────────────────────────────────
+    function showLoadingBanner() {
+        const existing = document.getElementById('__aegis_loading');
+        if (existing) return;
 
         const banner = document.createElement('div');
-        banner.id = '__aegis_banner';
+        banner.id = '__aegis_loading';
         banner.style.cssText = [
             'all:initial',
             'position:fixed',
-            'top:20px',
-            'right:20px',
+            'bottom:24px',
+            'right:24px',
             'z-index:2147483647',
             'background:#1a1a2e',
-            'border:1.5px solid ' + severityColor,
+            'border:1.5px solid #4f46e5',
             'border-radius:12px',
-            'padding:18px 22px',
-            'max-width:360px',
+            'padding:14px 18px',
             'font-family:system-ui,sans-serif',
             'font-size:13px',
-            'color:#ccc',
+            'color:#a5b4fc',
+            'display:flex',
+            'align-items:center',
+            'gap:12px',
+            'box-shadow:0 8px 32px rgba(79,70,229,0.3)',
+            'animation:aegis-in .2s ease',
         ].join(';');
 
         banner.innerHTML =
-            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-                '<span style="font-size:20px;all:initial;font-size:20px;">&#x1F6E1;&#xFE0F;</span>' +
-                '<strong style="color:' + severityColor + ';font-size:14px;">' +
-                    (analysis.title ?? 'Transaction Blocked') +
-                '</strong>' +
-                '<span style="margin-left:auto;background:' + severityColor + '22;color:' + severityColor + ';' +
-                    'font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid ' + severityColor + '55;' +
-                    'text-transform:uppercase;letter-spacing:.5px;">' +
-                    (analysis.severity ?? 'HIGH') +
-                '</span>' +
-            '</div>' +
-            '<p style="margin:0 0 12px;line-height:1.5;color:#bbb;">' +
-                (analysis.reason ?? 'This transaction was flagged as potentially malicious.') +
-            '</p>' +
-            '<div style="display:flex;justify-content:flex-end;">' +
-                '<button id="__aegis_dismiss" style="background:transparent;border:1px solid #555;' +
-                    'color:#aaa;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px;">' +
-                    'Dismiss' +
-                '</button>' +
+            '<style>' +
+                '@keyframes aegis-in{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}' +
+                '@keyframes aegis-spin{to{transform:rotate(360deg)}}' +
+            '</style>' +
+            '<div style="all:initial;width:18px;height:18px;border:2px solid rgba(79,70,229,0.3);border-top-color:#4f46e5;border-radius:50%;animation:aegis-spin .7s linear infinite;flex-shrink:0"></div>' +
+            '<div style="all:initial;font-family:system-ui,sans-serif;">' +
+                '<div style="font-size:13px;font-weight:600;color:#a5b4fc;">A.E.G.I.S. Analyzing...</div>' +
+                '<div style="font-size:11px;color:#6366f1;margin-top:2px;">Simulating transaction on-chain</div>' +
             '</div>';
 
         document.body.appendChild(banner);
-        document.getElementById('__aegis_dismiss').onclick = () => banner.remove();
-        setTimeout(() => { if (banner.parentNode) banner.remove(); }, 12000);
+    }
+
+    function removeLoadingBanner() {
+        const banner = document.getElementById('__aegis_loading');
+        if (banner) {
+            banner.style.opacity = '0';
+            banner.style.transform = 'translateY(10px)';
+            banner.style.transition = 'opacity .2s, transform .2s';
+            setTimeout(() => banner?.remove(), 200);
+        }
     }
 
     console.log('[A.E.G.I.S.] Proxy trap installed — waiting for window.ethereum.');

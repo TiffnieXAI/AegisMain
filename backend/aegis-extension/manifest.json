@@ -6,7 +6,8 @@
 
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+    "windows"
   ],
 
   "host_permissions": [
