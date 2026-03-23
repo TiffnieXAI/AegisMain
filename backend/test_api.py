@@ -34,8 +34,8 @@ req = urllib.request.urlopen(f"{BASE_URL}/", timeout=5)
 print(json.loads(req.read()))
 
 
-print("2. analyze-full w/ native transfer (0x calldata)")
-result = post("/analyze-full", {
+print("2. analyze-intent w/ native transfer (0x calldata)")
+result = post("/analyze-intent", {
     "sender": "0x0000000000000000000000000000000000000001",
     "to":     "0x0000000000000000000000000000000000000002",
     "data":   "0x",
@@ -50,8 +50,8 @@ print(
     f"trust registry  : {result.get('trust', {}).get('registry', {}).get('status')}")
 
 
-print("3. analyze-full — ERC-20 approve decode")
-result = post("/analyze-full", {
+print("3. analyze-intent — ERC-20 approve decode")
+result = post("/analyze-intent", {
     "sender": "0x0000000000000000000000000000000000000001",
     # Use any real contract address on Moonbase Alpha here
     "to":     "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
@@ -70,8 +70,8 @@ sim = result.get("simulation", {})
 print(f"sim success     : {sim.get('success')}")
 print(f"sim note        : {sim.get('simulation_note')}")
 
-print("4. analyze-full — unknown selector")
-result = post("/analyze-full", {
+print("4. analyze-intent — unknown selector")
+result = post("/analyze-intent", {
     "sender": "0x0000000000000000000000000000000000000001",
     "to":     "0x0000000000000000000000000000000000000002",
     "data":   "0xdeadbeef",

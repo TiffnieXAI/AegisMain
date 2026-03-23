@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .layer.feature_extractor import extract_features
-from .layer.risk_engine import compute_risk_score
-from .layer.llm_reasoner import generate_explanation  # Layer 3
-from .layer.verdict_engine import generate_verdict
+from app.layer.feature_extractor import extract_features
+from app.layer.risk_engine import compute_risk_score
+from app.layer.llm_reasoner import generate_explanation  # Layer 3
+from app.layer.verdict_engine import generate_verdict
 app = FastAPI()
 
 # ✅ Allow frontend (VERY IMPORTANT)
