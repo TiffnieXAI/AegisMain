@@ -159,6 +159,8 @@
         document.body.appendChild(banner);
     }
 
+
+
     function removeLoadingBanner() {
         const banner = document.getElementById('__aegis_loading');
         if (banner) {

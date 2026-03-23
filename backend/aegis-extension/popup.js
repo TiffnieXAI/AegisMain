@@ -8,17 +8,50 @@ async function init() {
 
     // Poll briefly — background.js writes to session storage just before
     // opening the window, so it's almost always ready immediately
+    showLoading();
+
     let pending = null;
-    for (let i = 0; i < 20; i++) {
-        const result = await chrome.storage.session.get(`pending_${requestId}`);
-        pending = result[`pending_${requestId}`];
-        if (pending) break;
-        await new Promise(r => setTimeout(r, 100));
+    let attempts = 0;
+
+    const maxAttempts = 30;
+
+    while(attempts < maxAttempts && !pending){
+        try{
+            const result = await chrome.storage.session.get(`pending_${requestId}`);
+            pending = result[`pending_${requestId}`];
+
+            if(pending) {
+                console.log('[A.E.G.I.S. popup] Found data after', attempts+1, 'attempts');
+                break;
+            }
+        } catch(err) {
+            console.error('[A.E.G.I.S. popup] Storage read error:', err);
+        }
+        attempts++;
+
+        const delay = Math.min(100 * Math.pow(1.5, attempts), 2000);
+        await new Promise(r => setTimeout(r, delay));
     }
 
-    if (!pending) { renderError('Analysis data not found.'); return; }
+    if (!pending) { renderError(`Analysis data not found after ${maxAttempts} attempts. Please try again.`); return; }
 
+    const dataAge = Date.now() - (pending.timestamp || 0);
+    if(dataAge > 300000) {
+        console.warn('[A.E.G.I.S popup] Data is now expired. It is ', dataAge, 'ms old');
+        renderError('Analysis data has expired. Please try again.');
+        return;
+    }
     renderPopup(pending.txData, pending.analysis);
+}
+
+function showLoading(){
+    document.getElementById('root').innerHTML = `
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading transaction analysis...</p>
+            <small>Please wait while we fetch security data</small>
+        </div>
+    `;
 }
 
 // ── Send decision back to background.js ───────────────────────────────────────
@@ -28,9 +61,15 @@ function sendDecision(decision) {
         direction: 'popup-decision',
         requestId,
         decision,  // 'accept' or 'reject'
+    }, (response) => {
+        if (chrome.runtime.lastError) {
+            console.error('[A.E.G.I.S popup] Sending Error:', chrome.runtime.lastError);
+        }
     });
-    window.close();
+
+    setTimeout(() => window.close(), 100);
 }
+
 
 // ── Helper functions ───────────────────────────────────────────────────────────
 function getRiskColor(severity) {
@@ -62,7 +101,7 @@ function renderError(msg) {
     document.getElementById('root').innerHTML = `
         <div class="loading-state">
             <span style="color:#f87171">${msg}</span>
-            <button onclick="window.close()" style="padding:8px 20px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;cursor:pointer;">Close</button>
+            <button onclick="window.close()" style="padding:8px 20px;margin-top:16px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;cursor:pointer;">Close</button>
         </div>`;
 }
 
@@ -74,10 +113,11 @@ function renderPopup(txData, analysis) {
     const timeStr    = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
 
     // Build summary text from analysis_summary
-    const summaryArr = analysis.analysis_summary?.summary ?? [];
-    const summaryText = Array.isArray(summaryArr) && summaryArr.length > 0
-        ? summaryArr.map(s => typeof s === 'string' ? s : s.detail ?? s.message ?? JSON.stringify(s)).join(' ')
-        : analysis.reason ?? 'No additional analysis available.';
+    // what happen, happening, and why risky
+    const summaryObj = analysis.ai_verdict.ai;
+    const summaryText = ["What Happens: ", summaryObj.what_can_happen, " What you are doing: ", summaryObj.what_is_happening, " Possible risk: ", summaryObj.why_risky].join(" ");
+
+    const recommended = summaryObj.recommendation;
 
     // Warnings list
     const warnings = analysis.analysis_summary?.warnings ?? [];
@@ -176,6 +216,11 @@ function renderPopup(txData, analysis) {
             <div class="analysis-section">
                 <div class="analysis-header"><i class="ri-shield-check-line"></i><h4>Security Analysis</h4></div>
                 <p class="analysis-text">${summaryText}</p>
+            </div>
+
+            <div class="recom-section">
+                <div class="recom-header"><i class="ri-shield-check-line"></i><h4>Recommendations</h4></div>
+                <p class="recom-text">${recommended}</p>
             </div>
 
             ${warningTexts.length > 0 ? `

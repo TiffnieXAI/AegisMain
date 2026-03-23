@@ -5,7 +5,7 @@
 
 
 import json
-from app import simulate_with_hardhat
+from aegis import simulate_with_hardhat
 
 
 NATIVE_TRANSFER = {
