@@ -5,3 +5,8 @@ artifacts/
 .states/
 /__pycache__/
 *.pyc
+backend/hardhat_sim/cache/
+backend/hardhat_sim/node_modules/
+frontend/admin.html
+frontend/admin.js
+.gitignore

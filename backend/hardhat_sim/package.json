@@ -1,0 +1,14 @@
+{
+  "name": "aegis-hardhat-sim",
+  "version": "1.0.0",
+  "description": "AEGIS transaction simulation sidecar — forks live chain state and dry-runs transactions",
+  "private": true,
+  "scripts": {
+    "sim": "hardhat run scripts/simulate.js --network hardhat"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.5",
+    "ethers": "^6.9.0",
+    "hardhat": "^2.19.4"
+  }
+}

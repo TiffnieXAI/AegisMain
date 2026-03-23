@@ -65,6 +65,7 @@
                         <button class="filter-btn" data-risk="medium">Medium <span class="count" id="riskMedium">0</span></button>
                         <button class="filter-btn" data-risk="low">Low <span class="count" id="riskLow">0</span></button>
                         <button class="filter-btn" data-risk="safe">Safe <span class="count" id="riskSafe">0</span></button>
+                        <button class="filter-btn" data-risk="unknown">Unknown <span class="count" id="riskUnknown">0</span></button>
                     </div>
                 </div>
             </div>
@@ -79,7 +80,93 @@
             <button class="clear-filters" id="clearFiltersBtn">Clear all filters</button>
         </div>
 
-        <!-- footer inside main? we'll keep original footer outside main, but also history-footer -->
+            <!-- Transaction Detail Modal -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Transaction Details</h2>
+                <button class="modal-close"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-meta">
+                    <span class="tx-id" id="modalTxId">0x7a3f...8d2e</span>
+                    <span class="tx-date" id="modalTxDate">Loading...</span>
+                </div>
+                
+                <div class="risk-section">
+                    <div class="risk-score-container">
+                        <span class="risk-label">Risk Score:</span>
+                        <span class="risk-value" id="modalRiskScore">0</span>
+                    </div>
+                    <span class="severity-badge" id="modalSeverity">LOW</span>
+                    <span class="status-badge" id="modalStatus">APPROVED</span>
+                </div>
+                
+                <div class="contract-address">
+                    <span class="label">Contract:</span>
+                    <code id="modalContractAddress">0x...</code>
+                    <button class="copy-btn"><i class="ri-file-copy-line"></i></button>
+                </div>
+                
+                <div class="analysis-section">
+                    <h3>Analysis Summary</h3>
+                    <p id="modalAnalysisSummary">Loading analysis...</p>
+                </div>
+                
+                <div class="security-warnings">
+                    <h3><i class="ri-alert-line"></i> Security Warnings</h3>
+                    <ul id="modalWarningsList">
+                        <li>Loading warnings...</li>
+                    </ul>
+                </div>
+                
+                <div class="recommendations">
+                    <h3><i class="ri-shield-check-line"></i> Recommendations</h3>
+                    <ul id="modalRecommendationsList">
+                        <li>Loading recommendations...</li>
+                    </ul>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">Gas Used</span>
+                        <span class="metric-value" id="modalGasUsed">0</span>
+                        <span class="metric-unit">units</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Gas Cost</span>
+                        <span class="metric-value" id="modalGasCost">0</span>
+                        <span class="metric-unit">ETH</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-technical" id="viewTechnicalBtn">
+                    <i class="ri-code-line"></i> View Full Technical Analysis
+                </button>
+                <div class="modal-actions">
+                    <button class="btn-report"><i class="ri-flag-line"></i> Report</button>
+                    <button class="modal-close btn-approved">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Analysis Modal -->
+    <div class="modal technical-modal" id="technicalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Technical Analysis</h2>
+                <button class="modal-close" id="closeTechnicalModalBtn"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body" id="technicalModalBody">
+                <pre class="technical-pre">Loading technical analysis...</pre>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-close-technical" id="closeTechnicalBtn">Close</button>
+            </div>
+        </div>
+    </div>
     </main>
 
     
@@ -95,5 +182,5 @@
     </footer>
 
 </body>
-<script src="script.js"></script>
+<script src="history.js"></script>
 </html>

@@ -24,6 +24,7 @@ class AIAnalysis(SQLModel, table=True):
     analysis_id: Optional[int] = Field(default=None, primary_key=True)
     transaction_hash: str = Field(max_length=100)
     ai_summary: str = Field(max_length=255)
-    recommendation: str = Field(max_length=255)
+    recommendation: str = Field(default="", max_length=255)
+    warning: str = Field(default="", max_length=255)
     trust_score: int
     # foreign key: transaction_hash references user_transactions.transaction_hash

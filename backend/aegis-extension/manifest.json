@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "A.E.G.I.S. Transaction Guard",
+  "version": "1.0.0",
+  "description": "Intercepts and analyzes every Web3 transaction before MetaMask signs it.",
+
+  "permissions": [
+    "storage",
+    "alarms",
+    "windows"
+  ],
+
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "<all_urls>"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "action": {
+    "default_title": "A.E.G.I.S."
+  }
+}
