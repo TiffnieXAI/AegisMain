@@ -1,7 +1,10 @@
 from sqlmodel import create_engine, SQLModel, Session
+from dotenv import load_dotenv
+import os
 
-# change to your mysql. We will move this in the future.
-DATABASE_URL = "mysql+pymysql://root:lanzsql@localhost/aegisdb"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DB_URL")
 
 engine = create_engine(DATABASE_URL, echo=True)
 

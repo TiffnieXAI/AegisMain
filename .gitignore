@@ -10,3 +10,5 @@ backend/hardhat_sim/node_modules/
 frontend/admin.html
 frontend/admin.js
 .gitignore
+ai/rag-semantic-layer/aegis_db/
+aegis_db/
