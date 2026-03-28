@@ -179,3 +179,89 @@ Result: the user avoids a potential wallet drain.
 ---
 
 ## Installation
+
+### Prerequisites
+
+* Node.js >= v22.10.0
+* Python = 3.11
+* MySQL
+
+> Tip: It is recommended to use a virtual environment to avoid dependency conflicts.
+
+---
+
+### Setup Python Environment
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate
+# or
+.\venv\bin\activate
+```
+
+---
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+DB_URL=mysql+pymysql://root:yourpassword@localhost/aegisdb
+GEMINI_API_KEY=your_api_key_here
+```
+
+---
+
+### Clone Repository
+
+```bash
+git clone https://github.com/TiffnieXAI/AegisMain.git
+cd .\AegisMain\
+bash setup.ps1
+```
+
+> You will be prompted to enter your MySQL password during database setup.
+
+---
+
+### Setup Hardhat
+
+```powershell
+cd .\AegisMain\backend\hardhat_sim
+npm install
+```
+
+---
+
+### Load Browser Extension
+
+* Open your browser extensions
+* Enable **Developer Mode**
+* Click **Load Unpacked**
+* Select the `aegis-extension` folder inside the backend directory
+
+---
+
+### Run the System
+
+```powershell
+cd .\AegisMain\backend\
+uvicorn aegis:app --port 8000 --reload
+```
+
+```powershell
+# In another terminal
+cd .\AegisMain\ai\rag-semantic-layer\
+uvicorn api:app --port 8001 --reload
+```
+
+---
+
+### Start Testing
+
+Trigger transaction requests using smart contracts and observe how AEGIS:
+
+* Simulates transactions
+* Analyzes intent
+* Flags risks
+* Protects the user
