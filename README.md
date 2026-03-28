@@ -1,124 +1,172 @@
-# 🛡️ AEGIS
+# AEGIS
 
 ### Autonomous Evaluation & Guardian Intelligence System
 
-> ⚠️ Stop signing blind transactions.
+> Stop signing blind transactions.
 > AEGIS protects Web3 users *before* assets are lost.
-
-🚀 AI-Powered Security Layer for Web3
-🔐 Built with Blockchain + AI + Simulation
-
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![Solidity](https://img.shields.io/badge/Solidity-smartcontracts-black)
-![Status](https://img.shields.io/badge/Status-Hackathon-green)
 
 ---
 
-## 🎥 Demo
+## Core Areas
 
-👉 Watch the demo here:
-https://your-demo-link-here
+<table>
+<tr>
+<td align="center">
+<img src="https://img.icons8.com/ios-filled/50/000000/blockchain-technology.png" width="40"/><br/>
+<b>Web3</b>
+</td>
+<td align="center">
+<img src="https://img.icons8.com/ios-filled/50/000000/artificial-intelligence.png" width="40"/><br/>
+<b>Artificial Intelligence</b>
+</td>
+<td align="center">
+<img src="https://img.icons8.com/ios-filled/50/000000/contract.png" width="40"/><br/>
+<b>Smart Contracts</b>
+</td>
+<td align="center">
+<img src="https://img.icons8.com/ios-filled/50/000000/network.png" width="40"/><br/>
+<b>Parachains</b>
+</td>
+<td align="center">
+<img src="https://img.icons8.com/ios-filled/50/000000/connected-people.png" width="40"/><br/>
+<b>Polkadot</b>
+</td>
+</tr>
+</table>
 
-<!-- Optional: Add GIF preview -->
+---
+
+## Demo
+
+Watch the demo:
+[https://your-demo-link-here](https://your-demo-link-here)
 
 ![Demo](./assets/demo.gif)
 
 ---
 
-## ⚡ Why AEGIS?
+## Why AEGIS?
 
-### 🚨 The Problem
+### The Problem
 
-Web3 is **dangerous for non-technical users**.
+Web3 transactions are **irreversible**, yet most users cannot understand what they are signing.
 
-* Users sign transactions they don’t understand
-* Smart contract data appears as unreadable hex
-* One mistake = **permanent loss of funds**
-* Attackers bypass blocklists using fresh malicious contracts
+* Smart contract data is unreadable (hex)
+* Users “blind sign” transactions
+* One mistake leads to permanent loss of assets
+* Attackers bypass traditional blocklists with new contracts
 
-👉 Result: Web3 remains unsafe and inaccessible for mass adoption
-
----
-
-### 💡 The Solution
-
-AEGIS acts as a **real-time AI guardian** between users and the blockchain.
-
-* 🧠 Translates complex transactions into human-readable intent
-* 🔍 Simulates outcomes before execution
-* ⚠️ Warns users of hidden risks
-* 🔗 Verifies trust using on-chain data
-
-> 💬 *Think: “Google Translate + Antivirus for Web3 transactions”*
+This creates a major barrier to **mass adoption**.
 
 ---
 
-## 🖥️ Interface Overview
+### The Solution
 
-### 🔍 Transaction Analysis
+AEGIS introduces an **AI-powered security layer** between users and the blockchain.
+
+It:
+
+* Translates transactions into human-readable intent
+* Simulates execution before approval
+* Detects malicious patterns using AI
+* Verifies trust using on-chain data
+
+> Think: *Transaction simulation + AI analysis + on-chain verification*
+
+---
+
+## System Overview
+
+![Architecture](./assets/architecture.png)
+
+---
+
+## Interface
+
+### Transaction Analysis
 
 ![Analysis](./assets/analysis.png)
 
-### ⚠️ Risk Warning
+### Risk Warning
 
 ![Warning](./assets/warning.png)
 
-### 📊 Dashboard
+### Dashboard
 
 ![Dashboard](./assets/dashboard.png)
 
-> Designed to simplify complex blockchain interactions into clear insights
-
 ---
 
-## 🧩 Features
+## Features
 
-### 🛡️ Live Interception
+### Live Interception
 
-* Pre-execution transaction simulation (Hardhat sandbox)
+* Pre-execution simulation via Hardhat sandbox
 * Human-readable intent extraction
-* Real-time risk warnings
+* Real-time risk alerts
+
+### Autonomous Intelligence (RAG Layer)
+
+* Contract analysis using LLM + vector database
+* Detection of zero-day threats via pattern recognition
+
+### On-Chain Trust Registry
+
+* Decentralized reputation system (Moonbase)
+* Immutable verification of contract safety
+
+### User Education
+
+* Explains why transactions are flagged
+* Helps users understand Web3 risks
 
 ---
 
-### 🧠 Autonomous Intelligence (RAG Layer)
+## Architecture Diagram (PlantUML)
 
-* Contextual contract analysis using LLM + Vector DB
-* Detects zero-day threats via pattern recognition
+```plantuml
+@startuml
+actor User
 
----
+User -> BrowserExtension : Initiate Transaction
 
-### 🔗 On-Chain Trust Registry
+BrowserExtension -> BackendAPI : Send Transaction Data
 
-* Community-vetted contract reputation system
-* Immutable verification using Moonbase Parachain
+BackendAPI -> HardhatSimulator : Simulate Transaction
+BackendAPI -> AIEngine : Analyze Intent (LLM + RAG)
 
----
+AIEngine -> VectorDB : Retrieve Context
+AIEngine -> BackendAPI : Risk Assessment
 
-### 🎓 Real-Time Education
+BackendAPI -> Blockchain : Query Trust Registry
 
-* Explains *why* a transaction is risky
-* Turns every alert into a learning experience
+BackendAPI -> BrowserExtension : Verdict + Warning
 
----
+BrowserExtension -> User : Display Decision
 
-## 🧪 Example Scenario
-
-User attempts to sign a transaction:
-
-> “Approve unlimited USDT spending”
-
-AEGIS detects:
-⚠️ Potential wallet drain exploit
-
-✅ Blocks transaction
-🧠 Explains the risk
-
-👉 User avoids losing funds
+@enduml
+```
 
 ---
 
-## 🛠️ Tech Stack
+## Example Scenario
+
+A user attempts to sign:
+
+> Approve unlimited token spending
+
+AEGIS:
+
+* Simulates the transaction
+* Detects abnormal permission scope
+* Flags as high risk
+* Explains the vulnerability
+
+Result: the user avoids a potential wallet drain.
+
+---
+
+## Tech Stack
 
 | Layer      | Technology           |
 | ---------- | -------------------- |
@@ -130,107 +178,4 @@ AEGIS detects:
 
 ---
 
-## ⚙️ Installation
-
-### ✅ Prerequisites
-
-* Node.js >= v22.10.0
-* Python = 3.11
-* MySQL
-
-💡 Recommended: Use a virtual environment
-
----
-
-### 🐍 Setup Environment
-
-```powershell
-python -m venv venv
-.\venv\Scripts\Activate
-# or
-.\venv\bin\activate
-```
-
----
-
-### 🔐 Environment Variables
-
-Create `.env` file:
-
-```env
-DB_URL=mysql+pymysql://root:yourpassword@localhost/aegisdb
-GEMINI_API_KEY=your_api_key_here
-```
-
----
-
-### 📦 Clone Repository
-
-```bash
-git clone https://github.com/TiffnieXAI/AegisMain.git
-cd .\AegisMain\
-bash setup.ps1
-```
-
----
-
-### ⚒️ Setup Hardhat
-
-```powershell
-cd .\AegisMain\backend\hardhat_sim
-npm install
-```
-
----
-
-### 🌐 Load Browser Extension
-
-* Enable Developer Mode in browser
-* Click “Load Unpacked”
-* Select `aegis-extension` folder
-
----
-
-### ▶️ Run the System
-
-```powershell
-cd .\AegisMain\backend\
-uvicorn aegis:app --port 8000 --reload
-```
-
-```powershell
-# In another terminal
-cd .\AegisMain\ai\rag-semantic-layer\
-uvicorn api:app --port 8001 --reload
-```
-
----
-
-## 🚀 Start Testing
-
-Trigger smart contract transactions and let AEGIS:
-
-✔ Simulate
-✔ Analyze
-✔ Warn
-✔ Protect
-
----
-
-## 🔮 Future Work
-
-* Wallet integrations (MetaMask, Talisman)
-* Mobile app version
-* DAO-powered trust registry
-
----
-
-## 📌 Final Note
-
-AEGIS is not just a tool — it’s a **guardian layer for Web3 users**.
-
-🔐 Safer
-🧠 Smarter
-🌍 More Accessible
-
-> **Don’t trust. Verify. Understand.**
+## Installation
